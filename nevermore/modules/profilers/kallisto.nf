@@ -11,7 +11,7 @@ process kallisto_index {
 	"""
 	mkdir -p kallisto/index/${sample.id}/
 
-	kallisto index -i kallisto/index/${sample.id}.idx {genes}
+	kallisto index -i kallisto/index/${sample.id}.idx ${genes}
 	"""
 	
 }
