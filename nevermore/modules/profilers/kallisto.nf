@@ -17,6 +17,7 @@ process kallisto_index {
 }
 
 params.profilers = [:]
+params.profilers.kallisto = [:]
 params.profilers.kallisto.bootstrap = 100
 
 process kallisto_quant {
