@@ -50,12 +50,18 @@ workflow {
 			def meta = [:]
 			meta.id = sample_id
 			meta.sample_id = sample_id.replaceAll(/_.*/, "")
+			// meta.library_source = "metaT"
 			return tuple(meta, file)
 		}
 	
 	annotation_ch.dump(pretty: true, tag: "annotation_ch")
 
 	fastq_ch = fastq_input.out.fastqs
+		.map { sample, file -> 
+			def meta = sample.clone()
+			meta.library_source = "metaT"
+			return tuple(meta, file)
+		}
 
 	// fastq_ch.dump(pretty: true, tag: "fastq_ch")
 
