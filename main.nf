@@ -39,7 +39,7 @@ workflow {
 		Channel.of(null)
 	)
 
-	annotation_ch = Channel.fromPath(params.annotation_input_dir + "/**.gz")
+	annotation_ch = Channel.fromPath(params.annotation_input_dir + "/**.{fna,ffn}.gz")
 		.map { file ->
 			return tuple(file.getParent().getName(), file)
 		}

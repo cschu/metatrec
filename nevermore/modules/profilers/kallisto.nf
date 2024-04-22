@@ -50,7 +50,7 @@ process kallisto_quant {
 	def calc_libstats = ""
 	if (single_reads) {
 
-		calc_libstats += "mean_length=\$(gzip -dc ${input_files} | awk 'NR%4==2 {sum_len+=length($0); n+=1; } END { printf('%d\n', sum_len / n); }')\n"
+		calc_libstats += "mean_length=\$(gzip -dc ${input_files} | awk 'NR%4==2 {sum_len+=length(\$0); n+=1; } END { printf('%d\n', sum_len / n); }')\n"
 		calc_libstats += "std_length=\$(gzip -dc ${input_files} | awk -v mean=\$mean_length 'NR%4==2 {sum_len+=(length($0)-mean)**2; n+=1; } END { printf('%d\n', sqrt(sum_len/(n-1)))}')"
 		single_flags += "--single"
 		single_flags += " -l \$mean_length -s \$std_length"
