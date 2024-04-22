@@ -42,7 +42,8 @@ workflow {
 	annotation_ch = Channel.fromPath(params.annotation_input_dir + "/**.{fna,ffn}.gz")
 		.map { file ->
 			// SAMEA112553567_METAG_H5WNWDSXC.UDI027-1.psa_megahit.prodigal.fna.gz
-			return tuple(file.name.replaceAll(/_.*/, ""), file)
+			// return tuple(file.name.replaceAll(/_.*/, ""), file.name.replaceAll(/\.psa_megahit.prodigal.fna.gz$/, "").replaceAll(/^.+_METAG_/, ""), file)
+			return tuple(file.name.replaceAll(/\.psa_megahit.prodigal.fna.gz$/, ""), file)
 			// return tuple(file.getParent().getName(), file)
 		}
 		.map { sample_id, file -> 
@@ -55,7 +56,11 @@ workflow {
 
 	fastq_ch = fastq_input.out.fastqs
 
-	fastq_ch.dump(pretty: true, tag: "fastq_ch")
+	// fastq_ch.dump(pretty: true, tag: "fastq_ch")
+
+	kallisto_index(
+		annotation_ch
+	)
 	
 	// nevermore_main(fastq_ch)
 
