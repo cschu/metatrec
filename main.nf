@@ -49,7 +49,8 @@ workflow {
 		.map { sample_id, file -> 
 			def meta = [:]
 			meta.id = sample_id
-			return tuple(sample_id, meta, file)
+			meta.sample_id = sample_id.replaceAll(/_.*/, "")
+			return tuple(meta, file)
 		}
 	
 	annotation_ch.dump(pretty: true, tag: "annotation_ch")
