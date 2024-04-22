@@ -41,9 +41,10 @@ workflow {
 
 	annotation_ch = Channel.fromPath(params.annotation_input_dir + "/**.{fna,ffn}.gz")
 		.map { file ->
-			return tuple(file.getParent().getName(), file)
+			// SAMEA112553567_METAG_H5WNWDSXC.UDI027-1.psa_megahit.prodigal.fna.gz
+			return tuple(file.name.replaceAll(/_.*/, ""), file)
+			// return tuple(file.getParent().getName(), file)
 		}
-		.groupTuple(size: 3, sort: true)
 		.map { sample_id, file -> 
 			def meta = [:]
 			meta.id = sample_id
