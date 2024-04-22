@@ -63,12 +63,12 @@ workflow {
 		annotation_ch
 	)
 	
-	// nevermore_main(fastq_ch)
+	nevermore_main(fastq_ch)
 
-	// counts_ch = nevermore_main.out.readcounts
+	counts_ch = nevermore_main.out.readcounts
 
-	// if (do_preprocessing && params.run_qa) {
-	// 	collate_stats(counts_ch.collect())		
-	// }
+	if (do_preprocessing && params.run_qa) {
+		collate_stats(counts_ch.collect())		
+	}
 
 }
