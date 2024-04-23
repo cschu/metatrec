@@ -55,6 +55,6 @@ process qc_bbmerge_insert_size {
     """
     mkdir -p ${sample.id}/bbmerge/
 
-    bbmerge.sh -Xmx${maxmem}g t=${task.cpus} in=${read1} in2=${read2} ihist=${sample.id}/bbmerge/${sample.id}.ihist.txt outinsert=path("${sample.id}/bbmerge/${sample.id}.inserts.txt") outadapter=path("${sample.id}/bbmerge/${sample.id}.adapters.txt") ${params.bbmerge_insert_size}
+    bbmerge.sh -Xmx${maxmem}g t=${task.cpus} ${read1} ${read2} ihist=${sample.id}/bbmerge/${sample.id}.ihist.txt outinsert=path("${sample.id}/bbmerge/${sample.id}.inserts.txt") outadapter=path("${sample.id}/bbmerge/${sample.id}.adapters.txt") ${params.bbmerge_insert_size}
     """
 }
