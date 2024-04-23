@@ -84,7 +84,7 @@ workflow {
 	kallisto_quant_input_ch = fastq_ch
 		.map { sample, fastqs -> return tuple(sample.sample_id, sample, fastqs) }
 		.join(
-			kallisto_index
+			kallisto_index.out.index
 				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
 			by: 0
 		)
