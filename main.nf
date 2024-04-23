@@ -8,6 +8,7 @@ include { gffquant_flow } from "./nevermore/workflows/gffquant"
 include { fastq_input } from "./nevermore/workflows/input"
 include { collate_stats } from "./nevermore/modules/collate"
 include { kallisto_index; kallisto_quant} from "./nevermore/modules/profilers/kallisto"
+include { bbmerge_insert_size} from "./nevermore/modules/qc/bbmerge"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -62,12 +63,40 @@ workflow {
 			meta.library_source = "metaT"
 			return tuple(meta, file)
 		}
+	
+	bbmerge_insert_size(fastq_ch)
 
 	// fastq_ch.dump(pretty: true, tag: "fastq_ch")
 
 	kallisto_index(
-		annotation_ch
+		annotation_ch			
 	)
+
+	// Apr-23 10:49:27.850 [Actor Thread 4] INFO  nextflow.extension.DumpOp - [DUMP: annotation_ch] [
+	// 	{
+	// 		"id": "SAMEA112551184_METAG_H5WNWDSXC.UDI026-1",
+	// 		"sample_id": "SAMEA112551184"
+	// 	},
+	// 	"/g/scb/bork/schudoma/tasks/metatrec.1892.20240422/annotation_input/SAMEA112551184_METAG_H5WNWDSXC.UDI026-1.psa_megahit.prodigal.fna.gz"
+	// ]
+
+
+	kallisto_quant_input_ch = fastq_ch
+		.map { sample, fastqs -> return tuple(sample.sample_id, sample, fastqs) }
+		.join(
+			kallisto_index
+				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
+			by: 0
+		)
+		.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
+			def meta = sample_fq.clone()
+			meta.id = sample_ix.id
+			meta.sample_id = sample_ix.sample_id
+			return tuple(meta, fastqs, index)
+		}
+	kallisto_quant_input_ch.dump(pretty: true, tag: "kallisto_quant_input_ch")
+	
+	kallisto_quant(kallisto_quant_input_ch)
 	
 	nevermore_main(fastq_ch)
 
