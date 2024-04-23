@@ -22,8 +22,8 @@ process hostile {
     """
     mkdir -p no_host/${sample.id}
 
-    export HOSTILE_CACHE_DIR=/scratch
 
     hostile clean --fastq1 ${r1_files[0]} ${r2_input} --aligner ${params.hostile.aligner} --index \$(readlink ${db}) --threads ${task.cpus} --out-dir no_host/${sample.id} --force 
     """
+    // export HOSTILE_CACHE_DIR=/scratch
 }
