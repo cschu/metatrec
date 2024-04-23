@@ -8,7 +8,7 @@ include { gffquant_flow } from "./nevermore/workflows/gffquant"
 include { fastq_input } from "./nevermore/workflows/input"
 include { collate_stats } from "./nevermore/modules/collate"
 include { kallisto_index; kallisto_quant} from "./nevermore/modules/profilers/kallisto"
-include { bbmerge_insert_size} from "./nevermore/modules/qc/bbmerge"
+include { qc_bbmerge_insert_size} from "./nevermore/modules/qc/bbmerge"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -64,7 +64,7 @@ workflow {
 			return tuple(meta, file)
 		}
 	
-	bbmerge_insert_size(fastq_ch)
+	qc_bbmerge_insert_size(fastq_ch)
 
 	// fastq_ch.dump(pretty: true, tag: "fastq_ch")
 
