@@ -38,7 +38,7 @@ workflow {
 	fastq_input(
 		Channel.fromPath(input_dir + "/*", type: "dir")
 			.filter { !params.ignore_dirs.split(",").contains(it.name) },
-		Channel.of(params.suffix_pattern)
+		Channel.of(null)
 	)
 
 	annotation_ch = Channel.fromPath(params.annotation_input_dir + "/**.{fna,ffn}.gz")
