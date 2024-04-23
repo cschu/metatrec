@@ -68,11 +68,11 @@ workflow {
 	qc_bbmerge_insert_size(fastq_ch)
 
 	fastq_ch.dump(pretty: true, tag: "fastq_ch")
-	kallisto_index.dump(pretty: true, tag: "kallisto_index")
 
 	kallisto_index(
 		annotation_ch			
 	)
+	kallisto_index.out.index.dump(pretty: true, tag: "kallisto_index")
 
 	hisat2_build(
 		annotation_ch
