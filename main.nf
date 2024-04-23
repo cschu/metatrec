@@ -8,7 +8,8 @@ include { gffquant_flow } from "./nevermore/workflows/gffquant"
 include { fastq_input } from "./nevermore/workflows/input"
 include { collate_stats } from "./nevermore/modules/collate"
 include { kallisto_index; kallisto_quant} from "./nevermore/modules/profilers/kallisto"
-include { qc_bbmerge_insert_size} from "./nevermore/modules/qc/bbmerge"
+include { qc_bbmerge_insert_size } from "./nevermore/modules/qc/bbmerge"
+include { hisat2_build } from "./nevermore/modules/align/hisat2"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -66,10 +67,15 @@ workflow {
 	
 	qc_bbmerge_insert_size(fastq_ch)
 
-	// fastq_ch.dump(pretty: true, tag: "fastq_ch")
+	fastq_ch.dump(pretty: true, tag: "fastq_ch")
+	kallisto_index.dump(pretty: true, tag: "kallisto_index")
 
 	kallisto_index(
 		annotation_ch			
+	)
+
+	hisat2_build(
+		annotation_ch
 	)
 
 	// Apr-23 10:49:27.850 [Actor Thread 4] INFO  nextflow.extension.DumpOp - [DUMP: annotation_ch] [
