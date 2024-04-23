@@ -43,6 +43,7 @@ process qc_bbmerge_insert_size {
 	def r2_files = reads.findAll( { it.name.endsWith("_R2.fastq.${compression}") } )
 
     def read1 = ""
+    def read2 = ""
     def orphans = ""
     if (r1_files.size() != 0) {
         read1 += "in1=${r1_files[0]}"
