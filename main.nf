@@ -38,7 +38,7 @@ workflow {
 	fastq_input(
 		Channel.fromPath(input_dir + "/*", type: "dir")
 			.filter { !params.ignore_dirs.split(",").contains(it.name) },
-		Channel.of(null)
+		Channel.of(params.suffix_pattern)
 	)
 
 	annotation_ch = Channel.fromPath(params.annotation_input_dir + "/**.{fna,ffn}.gz")
@@ -53,6 +53,18 @@ workflow {
 			meta.id = sample_id
 			meta.sample_id = sample_id.replaceAll(/_.*/, "")
 			// meta.library_source = "metaT"
+			return tuple(meta, file)
+		}
+
+	assembly_ch = Channel.fromPath(params.assembly_input_dir + "/**.fa.gz")
+		.map { file ->
+			//SAMEA112489502_METAG_H5WNWDSXC.UDI049-1-assembled.fa.gz
+			return tuple(file.name.replaceAll(/-assembled.fa.gz$/, ""), file)
+		}
+		.map { sample_id, file ->
+			def meta = [:]
+			meta.id = sample_id
+			meta.sample_id = sample_id.replaceAll(/_.*/, "")
 			return tuple(meta, file)
 		}
 	
@@ -75,7 +87,7 @@ workflow {
 	kallisto_index.out.index.dump(pretty: true, tag: "kallisto_index")
 
 	hisat2_build(
-		annotation_ch
+		assembly_ch
 	)
 
 	// Apr-23 10:49:27.850 [Actor Thread 4] INFO  nextflow.extension.DumpOp - [DUMP: annotation_ch] [
