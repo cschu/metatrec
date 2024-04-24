@@ -11,7 +11,11 @@ process hisat2_build {
     """
     mkdir -p ${sample.id}/hisat2/
 
-    hisat2-build -f ${genomeseq} ${sample.id}/hisat2/${sample.id}
+    gzip -dc ${genomeseq} > genome.fa
+
+    hisat2-build -f genome.fa ${sample.id}/hisat2/${sample.id}
+
+    rm -vf genome.fa
     """
 
 
