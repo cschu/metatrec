@@ -9,7 +9,7 @@ include { fastq_input } from "./nevermore/workflows/input"
 include { collate_stats } from "./nevermore/modules/collate"
 include { kallisto_index; kallisto_quant} from "./nevermore/modules/profilers/kallisto"
 include { qc_bbmerge_insert_size } from "./nevermore/modules/qc/bbmerge"
-include { hisat2_build } from "./nevermore/modules/align/hisat2"
+include { hisat2_build; hisat2_build } from "./nevermore/modules/align/hisat2"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -31,6 +31,38 @@ def do_preprocessing = (!params.skip_preprocessing || params.run_preprocessing)
 
 
 params.ignore_dirs = ""
+
+include { merge_and_sort } from "./nevermore/modules/align/helpers"
+include { hisat2_align } from "./nevermore/modules/align/hisat2"
+
+
+workflow align_to_reference {
+
+	take:
+		fastq_ch
+
+	main:
+
+		hisat2_align(fastq_ch)
+		
+		/*	merge paired-end and single-read alignments into single per-sample bamfiles */
+
+		aligned_ch = hisat2_align.out.bam
+			.map { sample, bam ->
+				sample_id = sample.id.replaceAll(/.(orphans|singles|chimeras)$/, "")
+				return tuple(sample_id, bam)
+			}
+			.groupTuple(sort: true)
+
+		merge_and_sort(aligned_ch, true)
+
+	emit:
+		alignments = merge_and_sort.out.bam
+		aln_counts = merge_and_sort.out.flagstats
+
+}
+
+
 
 
 workflow {
@@ -119,7 +151,30 @@ workflow {
 	
 	nevermore_main(fastq_ch)
 
+	
+	hisat2_input_ch = = fastq_ch
+		.map { sample, fastqs -> return tuple(sample.id, sample, fastqs) }
+		.join(
+			hisat2_build.out.index
+				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
+			by: 0
+		)
+		.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
+			def meta = sample_fq.clone()
+			meta.id = sample_ix.id
+			meta.sample_id = sample_ix.sample_id
+			return tuple(meta, fastqs, index)
+		}
+	hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
+	
+	align_to_reference(hisat2_input_ch)
+
 	counts_ch = nevermore_main.out.readcounts
+	counts_ch = counts_ch.concat(
+			align_to_reference.out.aln_counts
+				.map { sample, file -> return file }
+				.collect()
+		)
 
 	if (do_preprocessing && params.run_qa) {
 		collate_stats(counts_ch.collect())		
