@@ -60,7 +60,7 @@ process hisat2_align {
     """
     mkdir -p ${sample.id}/hisat2_align/
 
-    hisat2 -x \$(readlink ${index}) ${hisat2_options} ${input_files} | samtools sort --write-index -@ ${threads} - > ${sample.id}/hisat2_align/${sample.id}.bam
+    hisat2 -x ${sample.id} ${hisat2_options} ${input_files} | samtools sort --write-index -@ ${threads} - > ${sample.id}/hisat2_align/${sample.id}.bam
     """
 }
 
