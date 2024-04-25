@@ -7,7 +7,7 @@ process hisat2_build {
     tuple val(sample), path(genomeseq)
 
     output:
-    tuple val(sample), path("${sample.id}/hisat2/${sample.id}*")
+    tuple val(sample), path("${sample.id}/hisat2/${sample.id}*"), emit: index
 
     script:
     """
