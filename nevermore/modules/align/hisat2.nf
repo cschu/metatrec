@@ -1,7 +1,7 @@
 process hisat2_build {
-    // container "docker://quay.io/biocontainers/hisat2:2.2.1--hdbdd923_6"
+    container "docker://quay.io/biocontainers/hisat2:2.2.1--hdbdd923_6"
     // we need a hisat2/samtools mixed container
-    container "docker://registry.git.embl.de/schudoma/hisat2-docker:latest"
+    // container "docker://registry.git.embl.de/schudoma/hisat2-docker:latest"
 
     input:
     tuple val(sample), path(genomeseq)
