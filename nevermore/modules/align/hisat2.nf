@@ -31,7 +31,7 @@ process hisat2_align {
     tuple val(sample), path(fastqs), path(index)
 
     output:
-    tuple val(sample), path("${sample.id}/hisat2_align/${sample.id}.bam"), path("${sample.id}/hisat2_align/${sample.id}.bam.bai"), output: bam
+    tuple val(sample), path("${sample.id}/hisat2_align/${sample.id}.bam"), path("${sample.id}/hisat2_align/${sample.id}.bam.bai"), emit: bam
 
     script:
 
