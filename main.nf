@@ -9,7 +9,7 @@ include { fastq_input } from "./nevermore/workflows/input"
 include { collate_stats } from "./nevermore/modules/collate"
 include { kallisto_index; kallisto_quant} from "./nevermore/modules/profilers/kallisto"
 include { qc_bbmerge_insert_size } from "./nevermore/modules/qc/bbmerge"
-include { hisat2_build; hisat2_build } from "./nevermore/modules/align/hisat2"
+include { hisat2_build; hisat2_align } from "./nevermore/modules/align/hisat2"
 
 
 if (params.input_dir && params.remote_input_dir) {
