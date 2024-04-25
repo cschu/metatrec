@@ -20,6 +20,8 @@ process hisat2_build {
     rm -vf genome.fa
     """
 
+}
+
 process hisat2_align {
     // container "docker://quay.io/biocontainers/hisat2:2.2.1--hdbdd923_6"
     // we need a hisat2/samtools mixed container
@@ -64,4 +66,3 @@ process hisat2_align {
 
 
 
-}
