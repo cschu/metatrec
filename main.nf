@@ -10,7 +10,7 @@ include { collate_stats } from "./nevermore/modules/collate"
 include { kallisto_index; kallisto_quant} from "./nevermore/modules/profilers/kallisto"
 include { qc_bbmerge_insert_size } from "./nevermore/modules/qc/bbmerge"
 include { hisat2_build; hisat2_align } from "./nevermore/modules/align/hisat2"
-
+include { merge_and_sort } from "./nevermore/modules/align/helpers"
 
 if (params.input_dir && params.remote_input_dir) {
 	log.info """
@@ -32,8 +32,7 @@ def do_preprocessing = (!params.skip_preprocessing || params.run_preprocessing)
 
 params.ignore_dirs = ""
 
-include { merge_and_sort } from "./nevermore/modules/align/helpers"
-include { hisat2_align } from "./nevermore/modules/align/hisat2"
+
 
 
 workflow align_to_reference {
