@@ -53,10 +53,13 @@ process hisat2_align {
 		input_files += "-U ${orphans.join(' ')}"
 	}
 
-    // --no-spliced-alignment
     // --fr/--rf/--ff
     def threads = task.cpus.intdiv(2)
-    def hisat2_options = "-p ${threads} -q --phred33 "
+    def hisat2_options = "-p ${threads} -q --phred33"
+    if (params.hisat2_no_spliced_alignment) {
+        // --no-spliced-alignment
+        hisat2_options += " --no-spliced-alignment"
+    }
 
     // -S ${sample.id}/hisat2_align/${sample.id}.sam
     """
