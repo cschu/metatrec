@@ -58,7 +58,9 @@ process hisat2_align {
 
     // -S ${sample.id}/hisat2_align/${sample.id}.sam
     """
-    mkdir -p ${sample.id}/hisat2_align/
+    mkdir -p ${sample.id}/hisat2_align/ tmp/
+
+    export TMPDIR=tmp/
 
     hisat2 -x ${sample.id} ${hisat2_options} ${input_files} | tee ${sample.id}/hisat2_align/${sample.id}.sam | samtools sort -@ ${threads} > ${sample.id}/hisat2_align/${sample.id}.bam
     """
