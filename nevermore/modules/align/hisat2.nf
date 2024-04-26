@@ -62,7 +62,9 @@ process hisat2_align {
 
     export TMPDIR=tmp/
 
-    hisat2 -x ${sample.id} ${hisat2_options} ${input_files} | tee ${sample.id}/hisat2_align/${sample.id}.sam | samtools sort -@ ${threads} > ${sample.id}/hisat2_align/${sample.id}.bam
+    hisat2 -x ${sample.id} ${hisat2_options} ${input_files} > ${sample.id}.sam
+    samtools sort -@ ${threads} --write-index ${sample.id}.sam > ${sample.id}/hisat2_align/${sample.id}.bam
+    rm -fv ${sample.id}.sam
     """
 }
 
