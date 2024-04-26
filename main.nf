@@ -164,7 +164,8 @@ workflow {
 		)
 		.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
 			def meta = sample_fq.clone()
-			meta.id = sample_ix.id
+			// meta.id = sample_ix.id
+			meta.id = sample_fq.id
 			meta.sample_id = sample_ix.sample_id
 			return tuple(meta, fastqs, index)
 		}
