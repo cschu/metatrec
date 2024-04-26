@@ -62,7 +62,7 @@ process hisat2_align {
     """
     mkdir -p ${sample.id}/hisat2_align/ tmp/
 
-    echo "tmpdir is $TMPDIR"
+    echo "tmpdir is \$TMPDIR"
 
     export TMPDIR=tmp/
 
