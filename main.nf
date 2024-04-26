@@ -12,6 +12,7 @@ include { qc_bbmerge_insert_size } from "./nevermore/modules/qc/bbmerge"
 include { hisat2_build; hisat2_align } from "./nevermore/modules/align/hisat2"
 include { merge_and_sort } from "./nevermore/modules/align/helpers"
 include { stringtie } from "./metatrec/modules/assembly/stringtie"
+include { picard_insert_size } from "./metatrec/modules/qc/picard"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -170,7 +171,9 @@ workflow {
 	
 	align_to_reference(hisat2_input_ch)
 
+	
 	stringtie(align_to_reference.out.alignments)
+	picard_insert_size(align_to_reference.out.alignments)
 
 	counts_ch = nevermore_main.out.readcounts
 	counts_ch = counts_ch.concat(
