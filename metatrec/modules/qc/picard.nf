@@ -1,6 +1,6 @@
 process picard_insert_size {
 	container "docker://quay.io/biocontainers/picard:3.1.1--hdfd78af_0"
-	tag "${sample.id}"
+	// tag "${sample.id}"
 
 	input:
 	tuple val(sample), path(bam)
