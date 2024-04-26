@@ -62,12 +62,14 @@ process hisat2_align {
         hisat2_options += " --no-spliced-alignment"
     }
 
-    def index_id = index[0].name.replaceAll(/.[0-9]+.ht2$/, "")
+    // def index_id = index[0].name.replaceAll(/.[0-9]+.ht2$/, "")
     // -S ${sample.id}/hisat2_align/${sample.id}.sam
     """
     mkdir -p ${sample.id}/hisat2_align/ tmp/
 
-    hisat2 -x ${index_id} ${hisat2_options} ${input_files} > ${sample.id}.sam
+    index_id=\$(ls ${index[0]} | sed 's/\\.[0-9]\\+\\.ht2\$//')
+
+    hisat2 -x \${index_id} ${hisat2_options} ${input_files} > ${sample.id}.sam
     samtools sort -@ ${threads} ${sample.id}.sam > ${sample.id}/hisat2_align/${sample.id}.bam
     samtools index ${sample.id}/hisat2_align/${sample.id}.bam
     rm -fv ${sample.id}.sam
