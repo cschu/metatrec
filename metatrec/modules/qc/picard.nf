@@ -6,8 +6,8 @@ process picard_insert_size {
 	tuple val(sample), path(bam)
 
 	output:
-	tuple val(sample), "${sample.id}/picard/${sample.id}.imetrics.txt", emit: isize_metrics
-	tuple val(sample), "${sample.id}/picard/${sample.id}.ihist.pdf", emit: isize_hist
+	tuple val(sample), path("${sample.id}/picard/${sample.id}.imetrics.txt"), emit: isize_metrics
+	tuple val(sample), path("${sample.id}/picard/${sample.id}.ihist.pdf"), emit: isize_hist
 
 	script:
 	def picard_params = "MINIMUM_PCT=0.05"
