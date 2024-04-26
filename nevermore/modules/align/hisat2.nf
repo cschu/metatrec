@@ -33,6 +33,7 @@ process hisat2_align {
     output:
     // tuple val(sample), path("${sample.id}/hisat2_align/${sample.id}.bam"), path("${sample.id}/hisat2_align/${sample.id}.bam.bai"), emit: bam
     tuple val(sample), path("${sample.id}/hisat2_align/${sample.id}.bam"), emit: bam
+    tuple val(sample), path("${sample.id}/hisat2_align/${sample.id}.bam.bai"), emit: bai
     tuple val(sample), path("${sample.id}.HISAT2.DONE"), emit: sentinel
 
     script:
@@ -71,6 +72,7 @@ process hisat2_align {
 
     hisat2 -x ${sample.id} ${hisat2_options} ${input_files} > ${sample.id}.sam
     samtools sort -@ ${threads} ${sample.id}.sam > ${sample.id}/hisat2_align/${sample.id}.bam
+    samtools index ${sample.id}/hisat2_align/${sample.id}.bam
     rm -fv ${sample.id}.sam
 
     touch ${sample.id}.HISAT2.DONE
