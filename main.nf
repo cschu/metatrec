@@ -153,7 +153,7 @@ workflow {
 	nevermore_main(fastq_ch)
 
 	
-	hisat2_input_ch = fastq_ch
+	hisat2_input_ch = nevermore_main.out.fastqs
 		.map { sample, fastqs -> return tuple(sample.id, sample, fastqs) }
 		.combine(
 			hisat2_build.out.index
