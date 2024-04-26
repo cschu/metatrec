@@ -68,6 +68,7 @@ process hisat2_align {
     """
     mkdir -p ${sample.id}/hisat2_align/ tmp/
 
+    export TMPDIR=tmp/
 
     hisat2 -x ${index_id} ${hisat2_options} ${input_files} > ${sample.id}.sam
     samtools sort -@ ${threads} ${sample.id}.sam > ${sample.id}/hisat2_align/${sample.id}.bam
@@ -78,7 +79,6 @@ process hisat2_align {
     """
     // echo "tmpdir is \$TMPDIR"
 
-    // export TMPDIR=tmp/
     // hisat2 -x ${sample.id} ${hisat2_options} ${input_files} > ${sample.id}.sam
 }
 
