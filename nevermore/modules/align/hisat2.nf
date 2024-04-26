@@ -31,7 +31,8 @@ process hisat2_align {
     tuple val(sample), path(fastqs), path(index)
 
     output:
-    tuple val(sample), path("${sample.id}/hisat2_align/${sample.id}.bam"), path("${sample.id}/hisat2_align/${sample.id}.bam.bai"), emit: bam
+    // tuple val(sample), path("${sample.id}/hisat2_align/${sample.id}.bam"), path("${sample.id}/hisat2_align/${sample.id}.bam.bai"), emit: bam
+    tuple val(sample), path("${sample.id}/hisat2_align/${sample.id}.bam"), emit: bam
 
     script:
 
@@ -63,7 +64,7 @@ process hisat2_align {
     export TMPDIR=tmp/
 
     hisat2 -x ${sample.id} ${hisat2_options} ${input_files} > ${sample.id}.sam
-    samtools sort -@ ${threads} --write-index ${sample.id}.sam > ${sample.id}/hisat2_align/${sample.id}.bam
+    samtools sort -@ ${threads} ${sample.id}.sam > ${sample.id}/hisat2_align/${sample.id}.bam
     rm -fv ${sample.id}.sam
     """
 }
