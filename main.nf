@@ -132,7 +132,7 @@ workflow {
 
 	kallisto_quant_input_ch = fastq_ch
 		.map { sample, fastqs -> return tuple(sample.id, sample, fastqs) }
-		.join(
+		.combine(
 			kallisto_index.out.index
 				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
 			by: 0
@@ -153,7 +153,7 @@ workflow {
 	
 	hisat2_input_ch = fastq_ch
 		.map { sample, fastqs -> return tuple(sample.id, sample, fastqs) }
-		.join(
+		.combine(
 			hisat2_build.out.index
 				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
 			by: 0
