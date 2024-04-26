@@ -51,8 +51,9 @@ workflow align_to_reference {
 
 		aligned_ch = hisat2_align.out.bam
 			.map { sample, bam ->
-				sample_id = sample.id.replaceAll(/.(orphans|singles|chimeras)$/, "")
-				return tuple(sample_id, bam)
+				def meta = sample.clone()
+				meta.id = meta.id.replaceAll(/.(orphans|singles|chimeras)$/, "")
+				return tuple(meta, bam)
 			}
 			.groupTuple(sort: true)
 
