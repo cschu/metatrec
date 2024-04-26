@@ -62,6 +62,8 @@ process hisat2_align {
     """
     mkdir -p ${sample.id}/hisat2_align/ tmp/
 
+    echo "tmpdir is $TMPDIR"
+
     export TMPDIR=tmp/
 
     hisat2 -x ${sample.id} ${hisat2_options} ${input_files} > ${sample.id}.sam
