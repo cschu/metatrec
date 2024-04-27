@@ -168,9 +168,12 @@ workflow {
 
 	hisat2_input_ch = hisat2_input_chx
 		.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
-			def meta = sample_fq.clone()
+			def meta = sample_ix.clone()
 			// meta.id = sample_ix.id
-			meta.id = sample_fq.id
+			if (sample_fq.id.endsWith(".singles")) {
+				meta.id += ".singles"
+			}
+			// meta.id = sample_fq.id
 			meta.sample_id = sample_ix.sample_id
 			return tuple(meta, fastqs, index)
 		}
