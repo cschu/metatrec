@@ -175,7 +175,7 @@ workflow {
 		}
 	hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
 	
-	// align_to_reference(hisat2_input_ch)
+	align_to_reference(hisat2_input_ch)
 
 	
 	// stringtie(align_to_reference.out.alignments)
