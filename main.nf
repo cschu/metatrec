@@ -157,13 +157,15 @@ workflow {
 	nevermore_main(fastq_ch)
 
 	
-	hisat2_input_ch = nevermore_main.out.fastqs
+	hisat2_input_chx = nevermore_main.out.fastqs
 		.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
 		.combine(
 			hisat2_build.out.index
 				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
 			by: 0
 		)
+
+	hisat2_input_ch = hisat2_input_chx
 		.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
 			def meta = sample_fq.clone()
 			// meta.id = sample_ix.id
@@ -173,11 +175,11 @@ workflow {
 		}
 	hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
 	
-	align_to_reference(hisat2_input_ch)
+	// align_to_reference(hisat2_input_ch)
 
 	
-	stringtie(align_to_reference.out.alignments)
-	picard_insert_size(align_to_reference.out.alignments)
+	// stringtie(align_to_reference.out.alignments)
+	// picard_insert_size(align_to_reference.out.alignments)
 
 	counts_ch = nevermore_main.out.readcounts
 	counts_ch = counts_ch.concat(
