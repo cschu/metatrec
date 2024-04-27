@@ -57,6 +57,8 @@ workflow align_to_reference {
 			}
 			.groupTuple(sort: true)
 
+		aligned_ch.dump(pretty: true, tag: "aligned_ch")
+
 		merge_and_sort(aligned_ch, true)
 
 	emit:
