@@ -182,18 +182,18 @@ workflow {
 	align_to_reference(hisat2_input_ch)
 
 	
-	// stringtie(align_to_reference.out.alignments)
-	// picard_insert_size(align_to_reference.out.alignments)
+	stringtie(align_to_reference.out.alignments)
+	picard_insert_size(align_to_reference.out.alignments)
 
-	// counts_ch = nevermore_main.out.readcounts
-	// counts_ch = counts_ch.concat(
-	// 		align_to_reference.out.aln_counts
-	// 			.map { sample, file -> return file }
-	// 			.collect()
-	// 	)
+	counts_ch = nevermore_main.out.readcounts
+	counts_ch = counts_ch.concat(
+			align_to_reference.out.aln_counts
+				.map { sample, file -> return file }
+				.collect()
+		)
 
-	// if (do_preprocessing && params.run_qa) {
-	// 	collate_stats(counts_ch.collect())		
-	// }
+	if (do_preprocessing && params.run_qa) {
+		collate_stats(counts_ch.collect())		
+	}
 
 }
