@@ -60,7 +60,7 @@ workflow align_to_reference {
 
 		aligned_ch.dump(pretty: true, tag: "aligned_ch")
 
-		merge_and_sort(aligned_ch, true)
+		merge_and_sort(aligned_ch, (params.do_name_sort != null && params.do_name_sort))
 
 	emit:
 		alignments = merge_and_sort.out.bam
