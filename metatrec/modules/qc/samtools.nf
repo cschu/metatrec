@@ -7,7 +7,7 @@ process samtools_coverage {
 
 	script:
 	"""
-	mkdir -p ${sample.id}/samtools_coverage/${sample.id}.coverage.txt
+	mkdir -p ${sample.id}/samtools_coverage/
 
 	samtools coverage ${bam} > ${sample.id}/samtools_coverage/${sample.id}.coverage.txt
 	"""
