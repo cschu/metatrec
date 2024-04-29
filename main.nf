@@ -13,6 +13,7 @@ include { hisat2_build; hisat2_align } from "./nevermore/modules/align/hisat2"
 include { merge_and_sort } from "./nevermore/modules/align/helpers"
 include { stringtie } from "./metatrec/modules/assembly/stringtie"
 include { picard_insert_size } from "./metatrec/modules/qc/picard"
+include { samtools_coverage} from "./metatrec/modules/qc/samtools"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -184,13 +185,14 @@ workflow {
 	
 	stringtie(align_to_reference.out.alignments)
 	picard_insert_size(align_to_reference.out.alignments)
+	samtools_coverage(align_to_reference.out.alignments)
 
 	counts_ch = nevermore_main.out.readcounts
-	counts_ch = counts_ch.concat(
-			align_to_reference.out.aln_counts
-				.map { sample, file -> return file }
-				.collect()
-		)
+	// counts_ch = counts_ch.concat(
+	// 		align_to_reference.out.aln_counts
+	// 			.map { sample, file -> return file }
+	// 			.collect()
+	// 	)
 
 	if (do_preprocessing && params.run_qa) {
 		collate_stats(counts_ch.collect())		
