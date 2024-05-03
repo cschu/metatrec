@@ -64,7 +64,7 @@ workflow align_to_reference {
 		
 		/*	merge paired-end and single-read alignments into single per-sample bamfiles */
 
-		aligned_ch = hisat2_align.out.bam.concat(bowtie2_align.out.bam)
+		aligned_ch = hisat2_align.out.bam.mix(bowtie2_align.out.bam)
 			.map { sample, bam ->
 				def meta = sample.clone()
 				meta.id = meta.id.replaceAll(/.(orphans|singles|chimeras)$/, "")
@@ -211,6 +211,7 @@ workflow {
 	bowtie2_input_ch = bowtie2_input_chx
 		.map { sample_id, sample_fq, fastqs, sample_ix, index ->
 			def meta = sample_ix.clone()
+			meta.id += ".b"
 			if (sample_fq.id.endsWith(".singles")) {
 				meta.id += ".singles"
 			}
@@ -220,7 +221,7 @@ workflow {
 	bowtie2_input_ch.dump(pretty: true, tag: "bowtie2_input_ch")
 
 	
-	align_to_reference(hisat2_input_ch.concat(bowtie2_input_ch))
+	align_to_reference(hisat2_input_ch.mix(bowtie2_input_ch))
 
 
 	
