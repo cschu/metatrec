@@ -49,7 +49,7 @@ workflow align_to_reference {
 
 		fastq_ch
 			.branch {
-				hisat2: it[4] == "hisat2"
+				hisat2: it[3] == "hisat2"
 				bowtie2: true
 			}
 			.set { align_input_ch }
