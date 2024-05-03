@@ -14,6 +14,7 @@ include { merge_and_sort } from "./nevermore/modules/align/helpers"
 include { stringtie } from "./metatrec/modules/assembly/stringtie"
 include { picard_insert_size } from "./metatrec/modules/qc/picard"
 include { samtools_coverage} from "./metatrec/modules/qc/samtools"
+include { bowtie2_build; bowtie2_align } from "./nevermore/modules/align/bowtie2"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -46,11 +47,19 @@ workflow align_to_reference {
 
 	main:
 
-		hisat2_align(fastq_ch)
+		fastq_ch
+			.branch {
+				hisat2: it[4] == "hisat2"
+				bowtie2: true
+			}
+			.set { align_input_ch }
+
+		hisat2_align(align_input_ch.hisat2.map { sample, fastqs, index, aligner -> return tuple(sample, fastqs, index) })
+		bowtie2_align(align_input_ch.bowtie2.map { sample, fastqs, index, aligner -> return tuple(sample, fastqs, index) })
 		
 		/*	merge paired-end and single-read alignments into single per-sample bamfiles */
 
-		aligned_ch = hisat2_align.out.bam
+		aligned_ch = hisat2_align.out.bam.concat(bowtie2_align.out.bam)
 			.map { sample, bam ->
 				def meta = sample.clone()
 				meta.id = meta.id.replaceAll(/.(orphans|singles|chimeras)$/, "")
@@ -128,6 +137,10 @@ workflow {
 		assembly_ch
 	)
 
+	bowtie2_build(
+		assembly_ch
+	)
+
 	// Apr-23 10:49:27.850 [Actor Thread 4] INFO  nextflow.extension.DumpOp - [DUMP: annotation_ch] [
 	// 	{
 	// 		"id": "SAMEA112551184_METAG_H5WNWDSXC.UDI026-1",
@@ -176,11 +189,33 @@ workflow {
 			}
 			// meta.id = sample_fq.id
 			meta.sample_id = sample_ix.sample_id
-			return tuple(meta, fastqs, index)
+			return tuple(meta, fastqs, index, "hisat2")
 		}
 	hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
 	
-	align_to_reference(hisat2_input_ch)
+
+	bowtie2_input_chx = nevermore_main.out.fastqs
+		.combine(
+			bowtie2_build.out.index
+				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
+			by: 0
+		)
+	bowtie2_input_chx.dump(pretty: true, tag: "bowtie2_input_chx")
+
+	bowtie2_input_ch = bowtie2_input_chx
+		.map { sample_id, sample_fq, fastqs, sample_ix, index ->
+			def meta = sample_ix.clone()
+			if (sample_fq.id.endsWith(".singles")) {
+				meta.id += ".singles"
+			}
+			meta.sample_id = sample_ix.sample_id + ".b"
+			return tuple(meta, fastqs, index, "bowtie2")
+		}
+	bowtie2_input_ch.dump(pretty: true, tag: "bowtie2_input_ch")
+
+	
+	align_to_reference(hisat2_input_ch.concat(bowtie2_input_ch))
+
 
 	
 	stringtie(align_to_reference.out.alignments)
