@@ -65,7 +65,7 @@ workflow align_to_reference {
 				meta.id = meta.id.replaceAll(/.(orphans|singles|chimeras)$/, "")
 				return tuple(meta, bam)
 			}
-			.groupTuple(sort: true)
+			.groupTuple(sort: true, size: 2, remainder: true)
 
 		aligned_ch.dump(pretty: true, tag: "aligned_ch")
 
