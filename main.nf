@@ -54,6 +54,9 @@ workflow align_to_reference {
 			}
 			.set { align_input_ch }
 
+		align_input_ch.hisat2.dump(pretty: true, tag: "align_input_ch.hisat2")
+		align_input_ch.bowtie2.dump(pretty: true, tag: "align_input_ch.bowtie2")
+
 		hisat2_align(align_input_ch.hisat2.map { sample, fastqs, index, aligner -> return tuple(sample, fastqs, index) })
 		bowtie2_align(align_input_ch.bowtie2.map { sample, fastqs, index, aligner -> return tuple(sample, fastqs, index) })
 		
