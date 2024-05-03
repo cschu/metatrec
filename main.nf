@@ -200,6 +200,7 @@ workflow {
 	
 
 	bowtie2_input_chx = nevermore_main.out.fastqs
+		.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
 		.combine(
 			bowtie2_build.out.index
 				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
