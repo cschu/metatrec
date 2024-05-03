@@ -47,10 +47,12 @@ workflow align_to_reference {
 
 	main:
 
+		fastq_ch.dump(pretty: true, tag: "alt_fastq_ch")
+
 		fastq_ch
 			.branch {
 				hisat2: it[3] == "hisat2"
-				bowtie2: true
+				bowtie2: it[3] == "bowtie2"
 			}
 			.set { align_input_ch }
 
