@@ -36,7 +36,7 @@ def do_preprocessing = (!params.skip_preprocessing || params.run_preprocessing)
 
 
 params.ignore_dirs = ""
-
+params.do_name_sort = false
 
 
 
@@ -235,6 +235,10 @@ workflow {
 	// 			.map { sample, file -> return file }
 	// 			.collect()
 	// 	)
+
+
+	nevermore_align(nevermore_main.out.fastqs)
+
 
 	if (do_preprocessing && params.run_qa) {
 		collate_stats(counts_ch.collect())		

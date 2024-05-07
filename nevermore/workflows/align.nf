@@ -3,6 +3,7 @@
 nextflow.enable.dsl=2
 
 include { bwa_mem_align } from "../modules/align/bwa"
+include { minimap2_align } from "../modules/align/minimap2"
 include { merge_and_sort } from "../modules/align/helpers"
 
 def asset_dir = "${projectDir}/nevermore/assets"
@@ -19,15 +20,15 @@ workflow nevermore_align {
 	main:		
 		/*	align merged single-read and paired-end sets against reference */
 
-		bwa_mem_align(
+		minimap2_align(
 			fastq_ch,
 			params.reference,
-			true
+			params.do_name_sort
 		)
 
 		/*	merge paired-end and single-read alignments into single per-sample bamfiles */
 
-		aligned_ch = bwa_mem_align.out.bam
+		aligned_ch = minimap2_align.out.bam
 			.map { sample, bam ->
 				sample_id = sample.id.replaceAll(/.(orphans|singles|chimeras)$/, "")
 				return tuple(sample_id, bam)
