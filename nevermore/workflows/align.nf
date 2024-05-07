@@ -11,6 +11,8 @@ def do_alignment = params.run_gffquant || !params.skip_alignment
 def do_stream = params.gq_stream
 def do_preprocessing = (!params.skip_preprocessing || params.run_preprocessing)
 
+params.do_name_sort = true
+
 
 workflow nevermore_align {
 
