@@ -8,7 +8,7 @@ process minimap2_align {
 	val(do_name_sort)
 
 	output:
-	tuple val(sample), path("${sample.id}/${sample.id}.sam"), emit: sam
+	tuple val(sample), path("${sample.id}/${sample.id}.bam"), emit: bam
 
 	script:
 	def reads = (sample.is_paired) ? "${sample.id}_R1.fastq.gz ${sample.id}_R2.fastq.gz" : "${sample.id}_R1.fastq.gz"
