@@ -19,7 +19,11 @@ process minimap2_align {
 
 
 	"""
-	mkdir -p ${sample.id}/
+	set -e -o pipefail
+	
+	mkdir -p ${sample.id}/ tmp/
 	minimap2 ${mm_options} --split-prefix ${sample.id}_split ${reference} ${reads} | ${sort_cmd} > ${sample.id}/${sample.id}.bam
+
+	rm -rvf tmp/
 	"""
 }
