@@ -38,7 +38,7 @@ process merge_sam {
     // val(do_name_sort)
 
     output:
-    tuple val(sample), path("sam/${sample.id}.sam"), emit: bam
+    tuple val(sample), path("sam/${sample.id}.sam"), emit: sam
     tuple val(sample), path("stats/sam/${sample.id}.flagstats.txt"), emit: flagstats
 
     script:
