@@ -41,7 +41,7 @@ workflow nevermore_align {
 		merge_sam(aligned_ch)
 
 	emit:
-		alignments = merge_and_sort.out.sam
-		aln_counts = merge_and_sort.out.flagstats
+		alignments = merge_sam.out.sam
+		aln_counts = merge_sam.out.flagstats
 
 }
