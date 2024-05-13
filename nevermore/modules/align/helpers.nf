@@ -29,6 +29,40 @@ process merge_and_sort {
 }
 
 
+process merge_sam {
+    container "docker://quay.io/biocontainers/samtools:1.19.2--h50ea8bc_1"
+    label 'samtools'
+
+    input:
+    tuple val(sample), path(samfiles)
+    // val(do_name_sort)
+
+    output:
+    tuple val(sample), path("sam/${sample.id}.sam"), emit: bam
+    tuple val(sample), path("stats/sam/${sample.id}.flagstats.txt"), emit: flagstats
+
+    script:
+    def sort_order = (do_name_sort) ? "-n" : ""
+    def merge_cmd = ""
+
+    // need a better detection for this
+    if (samfiles instanceof Collection && samfiles.size() >= 2) {
+        // merge_cmd = "samtools merge -@ $task.cpus ${sort_order} bam/${sample.id}.bam ${bamfiles}"
+        merge_cmd += "samtools view -Sh ${samfiles[0]} > sam/${sample.id}.sam\n"
+        merge_cmd += "samtools view -S ${samfiles[1]} > sam/${sample.id}.sam"
+
+    } else {
+        merge_cmd = "ln -s ../${samfiles[0]} sam/${sample.id}.sam"
+    }
+
+    """
+    mkdir -p sam/ stats/sam/
+    ${merge_cmd}
+    samtools flagstats sam/${sample.id}.sam > stats/sam/${sample.id}.flagstats.txt
+    """
+}
+
+
 process db_filter {
     container "docker://quay.io/biocontainers/samtools:1.19.2--h50ea8bc_1"
     label 'samtools'
