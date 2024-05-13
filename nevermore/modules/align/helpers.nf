@@ -42,7 +42,7 @@ process merge_sam {
     tuple val(sample), path("stats/sam/${sample.id}.flagstats.txt"), emit: flagstats
 
     script:
-    def sort_order = (do_name_sort) ? "-n" : ""
+    // def sort_order = (do_name_sort) ? "-n" : ""
     def merge_cmd = ""
 
     // need a better detection for this
