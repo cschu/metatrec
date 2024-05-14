@@ -38,7 +38,11 @@ workflow nevermore_align {
 			.groupTuple(sort: true)
 
 		// merge_and_sort(aligned_ch, true)
-		merge_sam(aligned_ch)
+		merge_sam(aligned_ch.map { sample_id, samfiles ->
+			def meta = [:]
+			meta.id = sample_id
+			return tuple(meta, samfiles)
+		})
 
 	emit:
 		alignments = merge_sam.out.sam
