@@ -49,7 +49,7 @@ process merge_sam {
     if (samfiles instanceof Collection && samfiles.size() >= 2) {
         // merge_cmd = "samtools merge -@ $task.cpus ${sort_order} bam/${sample.id}.bam ${bamfiles}"
         merge_cmd += "samtools view -Sh ${samfiles[0]} > sam/${sample.id}.sam\n"
-        merge_cmd += "samtools view -S ${samfiles[1]} > sam/${sample.id}.sam"
+        merge_cmd += "samtools view -S ${samfiles[1]} >> sam/${sample.id}.sam"
 
     } else {
         merge_cmd = "ln -s ../${samfiles[0]} sam/${sample.id}.sam"
