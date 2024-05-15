@@ -33,7 +33,8 @@ process minimap2_align {
 
 
 	def threads = task.cpus.intdiv(2)
-	def mm_options = "--sam-hit-only -t ${threads} -x sr --secondary=yes -a"
+	// def mm_options = "--sam-hit-only -t ${threads} -x sr --secondary=yes -a"
+	def mm_options = "-t ${threads} -x sr --secondary=yes -a"
 
 	// def sort_cmd = "| " + ((do_name_sort) ? "samtools collate -@ ${threads} -o ${sample.id}.bam - tmp/collated_bam" : "samtools sort -@ ${threads} -o ${sample.id}.bam -")
 	def sort_cmd = ""  // we cannot convert large catalogue alignments to bam, hence we cannot properly sort those
