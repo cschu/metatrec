@@ -15,6 +15,7 @@ include { stringtie } from "./metatrec/modules/assembly/stringtie"
 include { picard_insert_size } from "./metatrec/modules/qc/picard"
 include { samtools_coverage} from "./metatrec/modules/qc/samtools"
 include { bowtie2_build; bowtie2_align } from "./nevermore/modules/align/bowtie2"
+include { motus } from "./nevermore/modules/profilers/motus"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -238,6 +239,8 @@ workflow {
 
 
 	nevermore_align(nevermore_main.out.fastqs)
+
+	motus(nevermore_main.out.fastqs, params.motus_db)
 
 
 	if (do_preprocessing && params.run_qa) {
