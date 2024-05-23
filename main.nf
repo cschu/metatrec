@@ -16,6 +16,7 @@ include { picard_insert_size } from "./metatrec/modules/qc/picard"
 include { samtools_coverage} from "./metatrec/modules/qc/samtools"
 include { bowtie2_build; bowtie2_align } from "./nevermore/modules/align/bowtie2"
 include { motus; motus_merge } from "./nevermore/modules/profilers/motus"
+include { metaT_megahit } from "./metatrec/modules/assembly/megahit"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -248,6 +249,16 @@ workflow {
 		params.motus_db
 	)
 
+	assembly_input_ch = nevermore_main.out.fastqs
+		.map { sample, fastqs -> 
+			def meta = sample.clone()
+			sample.id = sample.id.replaceAll(/\.singles$/, "")
+			return tuple(meta, fastqs)
+		}
+		.groupTuple(size: 2, remainder: true)
+		.map { sample, fastqs -> return tuple(sample, [fastqs].flatten()) }
+
+	metaT_megahit(assembly_input_ch, "stage1")
 
 	if (do_preprocessing && params.run_qa) {
 		collate_stats(counts_ch.collect())		
