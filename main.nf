@@ -252,7 +252,7 @@ workflow {
 	assembly_input_ch = nevermore_main.out.fastqs
 		.map { sample, fastqs -> 
 			def meta = sample.clone()
-			sample.id = sample.id.replaceAll(/\.singles$/, "")
+			meta.id = meta.id.replaceAll(/\.singles$/, "")
 			return tuple(meta, fastqs)
 		}
 		.groupTuple(size: 2, remainder: true)
