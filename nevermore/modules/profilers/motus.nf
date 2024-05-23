@@ -57,7 +57,7 @@ process motus_merge {
 
     for f in ${profiles}; do ln -sf ../\$f input/; done
 
-    motus merge -d input/ -o motus_profiles/motus_merged.txt
+    motus merge -db ${motus_db} -d input/ -o motus_profiles/motus_merged.txt
     """
 
 
