@@ -242,7 +242,9 @@ workflow {
 
 	motus(nevermore_main.out.fastqs, params.motus_db)
 	motus_merge(
-		motus.out.motus_profile.collect().map { sample, profile -> return profile },
+		motus.out.motus_profile
+			.map { sample, profile -> return profile }
+			.collect(),
 		params.motus_db
 	)
 
