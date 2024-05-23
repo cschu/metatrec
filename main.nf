@@ -260,8 +260,8 @@ workflow {
 
 	metaT_megahit(assembly_input_ch, "stage1")
 
-	if (do_preprocessing && params.run_qa) {
-		collate_stats(counts_ch.collect())		
-	}
+	// if (do_preprocessing && params.run_qa) {
+	// 	collate_stats(counts_ch.collect())		
+	// }
 
 }
