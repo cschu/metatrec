@@ -223,13 +223,13 @@ workflow {
 	bowtie2_input_ch.dump(pretty: true, tag: "bowtie2_input_ch")
 
 	
-	align_to_reference(hisat2_input_ch.mix(bowtie2_input_ch))
+	// align_to_reference(hisat2_input_ch.mix(bowtie2_input_ch))
 
 
 	
-	stringtie(align_to_reference.out.alignments)
-	picard_insert_size(align_to_reference.out.alignments)
-	samtools_coverage(align_to_reference.out.alignments)
+	// stringtie(align_to_reference.out.alignments)
+	// picard_insert_size(align_to_reference.out.alignments)
+	// samtools_coverage(align_to_reference.out.alignments)
 
 	counts_ch = nevermore_main.out.readcounts
 	// counts_ch = counts_ch.concat(
