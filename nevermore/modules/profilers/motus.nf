@@ -38,3 +38,28 @@ process motus {
     motus profile -t $task.cpus -k ${params.motus_tax_level} -c -v 7 -q -l ${params.motus_min_length} -g ${params.motus_n_marker_genes} -db ${motus_db} ${input_files} > ${sample.id}/${sample.id}.motus.txt
     """
 }
+
+
+
+process motus_merge {
+    container "docker://quay.io/biocontainers/motus:3.1.0--pyhdfd78af_0"
+
+    input:
+    path(profiles)
+    path(motus_db)
+
+    output:
+    path("motus_profiles/motus_merged.txt")
+
+    script:
+    """
+    mkdir -p motus_profiles/ input/
+
+    for f in ${profiles}; do ln ../\$f input/; done
+
+    motus merge -d input/ -o motus_profiles/motus_merged.txt
+
+    """
+
+
+}
