@@ -55,7 +55,7 @@ process motus_merge {
     """
     mkdir -p motus_profiles/ input/
 
-    for f in ${profiles}; do ln ../\$f input/; done
+    for f in ${profiles}; do ln -sf ../\$f input/; done
 
     motus merge -d input/ -o motus_profiles/motus_merged.txt
     """
