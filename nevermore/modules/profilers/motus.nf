@@ -35,7 +35,7 @@ process motus {
     
     """
     mkdir -p ${sample.id}
-    motus profile -t $task.cpus -k ${params.motus_tax_level} -c -v 7 -q -l ${params.motus_min_length} -g ${params.motus_n_marker_genes} -db ${motus_db} ${input_files} > ${sample.id}/${sample.id}.motus.txt
+    motus profile -n ${sample.id} -t $task.cpus -k ${params.motus_tax_level} -c -v 7 -q -l ${params.motus_min_length} -g ${params.motus_n_marker_genes} -db ${motus_db} ${input_files} > ${sample.id}/${sample.id}.motus.txt
     """
 }
 
