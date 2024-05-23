@@ -239,7 +239,7 @@ workflow {
 	// 	)
 
 
-	nevermore_align(nevermore_main.out.fastqs)
+	// nevermore_align(nevermore_main.out.fastqs)
 
 	motus(nevermore_main.out.fastqs, params.motus_db)
 	motus_merge(
