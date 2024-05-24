@@ -74,7 +74,7 @@ process bwa2assembly {
 
 	"""
 	mkdir -p bwa/${sample.id}/
-	bwa mem -v 1 -t ${task.cpus} ${sample.id} ${input_files} 2>> error.log | \
+	bwa mem -v 1 -t ${task.cpus} ${sample.index_id} ${input_files} 2>> error.log | \
 	samtools view -bS - > bwa/${sample.id}/${sample.id}.bam 2>> error.log
 	"""
 

@@ -265,7 +265,11 @@ workflow {
 		nevermore_main.out.fastqs
 			.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
 			.combine(bwa_index.out.index, by: 0)
-			.map { sample_id, sample, fastqs, index -> return tuple(sample, fastqs, index) }
+			.map { sample_id, sample, fastqs, index -> 
+				def meta = sample.clone()
+				meta.index_id = sample_id
+				return tuple(meta, fastqs, index) 
+			}
 	)
 
 	// if (do_preprocessing && params.run_qa) {
