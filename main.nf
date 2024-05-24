@@ -263,8 +263,8 @@ workflow {
 
 	bwa2assembly(
 		nevermore_main.out.fastqs
-			.map { sample, fastqs -> return tuple(sample.id, sample, fastqs) }
-			.join(bwa_index.out.index, by: 0)
+			.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+			.combine(bwa_index.out.index, by: 0)
 			.map { sample_id, sample, fastqs, index -> return tuple(sample, fastqs, index) }
 	)
 
