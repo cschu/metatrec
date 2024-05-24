@@ -89,7 +89,7 @@ process bwa_index {
 	tuple val(sample), path(fasta)
 
 	output:
-	tuple val(sample.id), path("index/${sample.library_source}/${sample.id}/${sample.id}*"), emit: index
+	tuple val(sample.id), path("index/${sample.id}/${sample.id}*"), emit: index
 
 	script:
 	"""
