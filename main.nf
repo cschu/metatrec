@@ -261,7 +261,12 @@ workflow {
 	metaT_megahit(assembly_input_ch, "stage1")
 	bwa_index(metaT_megahit.out.contigs)
 
-	
+	bwa2assembly(
+		nevermore_main.out.fastqs
+			.map { sample, fastqs -> return tuple(sample.id, sample, fastqs) }
+			.join(bwa_index.out.index, by: 0)
+			.map { sample_id, sample, fastqs, index -> return tuple(sample, fastqs, index) }
+	)
 
 	// if (do_preprocessing && params.run_qa) {
 	// 	collate_stats(counts_ch.collect())		
