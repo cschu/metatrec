@@ -16,7 +16,7 @@ include { picard_insert_size } from "./metatrec/modules/qc/picard"
 include { samtools_coverage} from "./metatrec/modules/qc/samtools"
 include { bowtie2_build; bowtie2_align } from "./nevermore/modules/align/bowtie2"
 include { motus; motus_merge } from "./nevermore/modules/profilers/motus"
-include { metaT_megahit } from "./metatrec/modules/assembly/megahit"
+include { metaT_megahit; bwa_index; bwa2assembly } from "./metatrec/modules/assembly/megahit"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -259,6 +259,9 @@ workflow {
 		.map { sample, fastqs -> return tuple(sample, [fastqs].flatten()) }
 
 	metaT_megahit(assembly_input_ch, "stage1")
+	bwa_index(metaT_megahit.out.contigs)
+
+	
 
 	// if (do_preprocessing && params.run_qa) {
 	// 	collate_stats(counts_ch.collect())		
