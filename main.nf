@@ -124,9 +124,12 @@ workflow {
 	
 	annotation_ch.dump(pretty: true, tag: "annotation_ch")
 
+	// SAMEA112489552_METAT-PROK_H5WNWDSXC.UDP0078-4
 	fastq_ch = fastq_input.out.fastqs
 		.map { sample, file -> 
-			def meta = sample.clone()
+			def meta = [:]  //sample.clone()
+			meta.id = sample_id
+			meta.sample_id = sample_id.replaceAll(/_.*/, "")
 			meta.library_source = "metaT"
 			return tuple(meta, file)
 		}
@@ -140,9 +143,9 @@ workflow {
 	)
 	kallisto_index.out.index.dump(pretty: true, tag: "kallisto_index")
 
-	hisat2_build(
-		assembly_ch
-	)
+	// hisat2_build(
+	// 	assembly_ch
+	// )
 
 	bowtie2_build(
 		assembly_ch
@@ -158,7 +161,7 @@ workflow {
 
 
 	kallisto_quant_input_ch = fastq_ch
-		.map { sample, fastqs -> return tuple(sample.id, sample, fastqs) }
+		.map { sample, fastqs -> return tuple(sample.sample_id, sample, fastqs) }
 		.combine(
 			kallisto_index.out.index
 				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
@@ -177,28 +180,28 @@ workflow {
 	
 	nevermore_main(fastq_ch)
 
-	
-	hisat2_input_chx = nevermore_main.out.fastqs
-		.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
-		.combine(
-			hisat2_build.out.index
-				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
-			by: 0
-		)
-	hisat2_input_chx.dump(pretty: true, tag: "hisat2_input_chx")
+	hisat2_input_ch = Channel.empty()
+	// hisat2_input_chx = nevermore_main.out.fastqs
+	// 	.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+	// 	.combine(
+	// 		hisat2_build.out.index
+	// 			.map { sample, index -> return tuple(sample.sample_id, sample, index) },
+	// 		by: 0
+	// 	)
+	// hisat2_input_chx.dump(pretty: true, tag: "hisat2_input_chx")
 
-	hisat2_input_ch = hisat2_input_chx
-		.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
-			def meta = sample_ix.clone()
-			// meta.id = sample_ix.id
-			if (sample_fq.id.endsWith(".singles")) {
-				meta.id += ".singles"
-			}
-			// meta.id = sample_fq.id
-			meta.sample_id = sample_ix.sample_id
-			return tuple(meta, fastqs, index, "hisat2")
-		}
-	hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
+	// hisat2_input_ch = hisat2_input_chx
+	// 	.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
+	// 		def meta = sample_ix.clone()
+	// 		// meta.id = sample_ix.id
+	// 		if (sample_fq.id.endsWith(".singles")) {
+	// 			meta.id += ".singles"
+	// 		}
+	// 		// meta.id = sample_fq.id
+	// 		meta.sample_id = sample_ix.sample_id
+	// 		return tuple(meta, fastqs, index, "hisat2")
+	// 	}
+	// hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
 	
 
 	bowtie2_input_chx = nevermore_main.out.fastqs
@@ -223,23 +226,23 @@ workflow {
 	bowtie2_input_ch.dump(pretty: true, tag: "bowtie2_input_ch")
 
 	
-	// align_to_reference(hisat2_input_ch.mix(bowtie2_input_ch))
+	align_to_reference(hisat2_input_ch.mix(bowtie2_input_ch))
 
 
 	
-	// stringtie(align_to_reference.out.alignments)
-	// picard_insert_size(align_to_reference.out.alignments)
-	// samtools_coverage(align_to_reference.out.alignments)
+	stringtie(align_to_reference.out.alignments)
+	picard_insert_size(align_to_reference.out.alignments)
+	samtools_coverage(align_to_reference.out.alignments)
 
 	counts_ch = nevermore_main.out.readcounts
-	// counts_ch = counts_ch.concat(
-	// 		align_to_reference.out.aln_counts
-	// 			.map { sample, file -> return file }
-	// 			.collect()
-	// 	)
+	counts_ch = counts_ch.concat(
+			align_to_reference.out.aln_counts
+				.map { sample, file -> return file }
+				.collect()
+		)
 
 
-	// nevermore_align(nevermore_main.out.fastqs)
+	nevermore_align(nevermore_main.out.fastqs)
 
 	motus(nevermore_main.out.fastqs, params.motus_db)
 	motus_merge(
@@ -272,8 +275,8 @@ workflow {
 			}
 	)
 
-	// if (do_preprocessing && params.run_qa) {
-	// 	collate_stats(counts_ch.collect())		
-	// }
+	if (do_preprocessing && params.run_qa) {
+		collate_stats(counts_ch.collect())		
+	}
 
 }
