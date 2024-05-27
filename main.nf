@@ -128,8 +128,8 @@ workflow {
 	fastq_ch = fastq_input.out.fastqs
 		.map { sample, file -> 
 			def meta = [:]  //sample.clone()
-			meta.id = sample_id
-			meta.sample_id = sample_id.replaceAll(/_.*/, "")
+			meta.id = sample.id
+			meta.sample_id = sample.id.replaceAll(/_.*/, "")
 			meta.library_source = "metaT"
 			return tuple(meta, file)
 		}
