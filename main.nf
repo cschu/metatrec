@@ -107,7 +107,6 @@ workflow {
 			meta.id = sample_id
 			meta.sample_id = sample_id.replaceAll(/_.*/, "")
 			// meta.library_source = "metaT"
-			meta.is_paired = sample.is_paired
 			return tuple(meta, file)
 		}
 
@@ -132,6 +131,8 @@ workflow {
 			meta.id = sample.id
 			meta.sample_id = sample.id.replaceAll(/_.*/, "")
 			meta.library_source = "metaT"
+			meta.is_paired = sample.is_paired
+			
 			return tuple(meta, file)
 		}
 	
