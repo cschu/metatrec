@@ -227,10 +227,11 @@ workflow {
 	bowtie2_input_ch = bowtie2_input_chx
 		.map { sample_id, sample_fq, fastqs, sample_ix, index ->
 			def meta = sample_ix.clone()
+			meta.id += "." + sample_fq.id.replaceAll(/SAMEA[0-9]+_METAT/, "")
 			meta.id += ".b"
-			if (sample_fq.id.endsWith(".singles")) {
-				meta.id += ".singles"
-			}
+			// if (sample_fq.id.endsWith(".singles")) {
+			// 	meta.id += ".singles"
+			// }
 			meta.sample_id = sample_ix.sample_id + ".b"
 			return tuple(meta, fastqs, index, "bowtie2")
 		}
