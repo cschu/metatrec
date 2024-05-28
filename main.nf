@@ -187,7 +187,7 @@ workflow {
 			def meta = sample.clone()
 			meta.is_paired = [fastqs].flatten().size() == 2
 		}
-	downstream_fq_ch.out.fastqs.dump(pretty: true, tag: "nvm_main_out_ch")
+	downstream_fq_ch.dump(pretty: true, tag: "nvm_main_out_ch")
 
 	hisat2_input_ch = Channel.empty()
 	// hisat2_input_chx = nevermore_main.out.fastqs
