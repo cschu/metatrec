@@ -179,6 +179,7 @@ workflow {
 	kallisto_quant(kallisto_quant_input_ch)
 	
 	nevermore_main(fastq_ch)
+	nevermore_main.out.fastqs.dump(pretty: true, tag: "nvm_main_out_ch")
 
 	hisat2_input_ch = Channel.empty()
 	// hisat2_input_chx = nevermore_main.out.fastqs
