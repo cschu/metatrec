@@ -186,6 +186,7 @@ workflow {
 		.map { sample, fastqs ->
 			def meta = sample.clone()
 			meta.is_paired = [fastqs].flatten().size() == 2
+			return tuple(meta, fastqs)
 		}
 	downstream_fq_ch.dump(pretty: true, tag: "nvm_main_out_ch")
 
