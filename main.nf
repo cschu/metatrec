@@ -205,7 +205,8 @@ workflow {
 	
 
 	bowtie2_input_chx = nevermore_main.out.fastqs
-		.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+		// .map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+		.map { sample, fastqs -> return tuple(sample.sample_id, sample, fastqs) }
 		.combine(
 			bowtie2_build.out.index
 				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
@@ -235,7 +236,7 @@ workflow {
 	samtools_coverage(align_to_reference.out.alignments)
 
 	counts_ch = nevermore_main.out.readcounts
-	counts_ch = counts_ch.concat(
+	counts_ch = counts_ch.mix(
 			align_to_reference.out.aln_counts
 				.map { sample, file -> return file }
 				.collect()
@@ -244,13 +245,13 @@ workflow {
 
 	nevermore_align(nevermore_main.out.fastqs)
 
-	motus(nevermore_main.out.fastqs, params.motus_db)
-	motus_merge(
-		motus.out.motus_profile
-			.map { sample, profile -> return profile }
-			.collect(),
-		params.motus_db
-	)
+	// motus(nevermore_main.out.fastqs, params.motus_db)
+	// motus_merge(
+	// 	motus.out.motus_profile
+	// 		.map { sample, profile -> return profile }
+	// 		.collect(),
+	// 	params.motus_db
+	// )
 
 	assembly_input_ch = nevermore_main.out.fastqs
 		.map { sample, fastqs -> 
@@ -260,6 +261,9 @@ workflow {
 		}
 		.groupTuple(size: 2, remainder: true)
 		.map { sample, fastqs -> return tuple(sample, [fastqs].flatten()) }
+
+	nevermore_main.out.fastqs.dump(pretty: true, tag: "nvm_main_out_ch")
+	assembly_input_ch.dump(pretty: true, tag: "assembly_input_ch")
 
 	metaT_megahit(assembly_input_ch, "stage1")
 	bwa_index(metaT_megahit.out.contigs)
