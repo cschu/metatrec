@@ -180,7 +180,13 @@ workflow {
 	kallisto_quant(kallisto_quant_input_ch)
 	
 	nevermore_main(fastq_ch)
-	nevermore_main.out.fastqs.dump(pretty: true, tag: "nvm_main_out_ch")
+
+	downstream_fq_ch = nevermore_main.out.fastqs
+		.map { sample, fastqs ->
+			def meta = sample.clone()
+			meta.is_paired = [fastqs].flatten().size() == 2
+		}
+	downstream_fq_ch.out.fastqs.dump(pretty: true, tag: "nvm_main_out_ch")
 
 	hisat2_input_ch = Channel.empty()
 	// hisat2_input_chx = nevermore_main.out.fastqs
@@ -206,7 +212,7 @@ workflow {
 	// hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
 	
 	bowtie2_build.out.index.dump(pretty: true, tag: "bowtie2_build_ch")
-	bowtie2_input_chx = nevermore_main.out.fastqs
+	bowtie2_input_chx = downstream_fq_ch  //nevermore_main.out.fastqs
 		// .map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
 		.map { sample, fastqs -> return tuple(sample.sample_id, sample, fastqs) }
 		.combine(
@@ -245,7 +251,7 @@ workflow {
 		)
 
 
-	nevermore_align(nevermore_main.out.fastqs)
+	nevermore_align(downstream_fq_ch)  // nevermore_main.out.fastqs)
 
 	// motus(nevermore_main.out.fastqs, params.motus_db)
 	// motus_merge(
@@ -255,7 +261,7 @@ workflow {
 	// 	params.motus_db
 	// )
 
-	assembly_input_ch = nevermore_main.out.fastqs
+	assembly_input_ch = downstream_fq_ch  //nevermore_main.out.fastqs
 		.map { sample, fastqs -> 
 			def meta = sample.clone()
 			meta.id = meta.id.replaceAll(/\.singles$/, "")
@@ -264,14 +270,15 @@ workflow {
 		.groupTuple(size: 2, remainder: true)
 		.map { sample, fastqs -> return tuple(sample, [fastqs].flatten()) }
 
-	nevermore_main.out.fastqs.dump(pretty: true, tag: "nvm_main_out_ch")
+	// nevermore_main.out.fastqs.dump(pretty: true, tag: "nvm_main_out_ch")
 	assembly_input_ch.dump(pretty: true, tag: "assembly_input_ch")
 
 	metaT_megahit(assembly_input_ch, "stage1")
 	bwa_index(metaT_megahit.out.contigs)
 
 	bwa2assembly(
-		nevermore_main.out.fastqs
+		// nevermore_main.out.fastqs
+		downstream_fq_ch
 			.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
 			.combine(bwa_index.out.index, by: 0)
 			.map { sample_id, sample, fastqs, index -> 
