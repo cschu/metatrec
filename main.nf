@@ -204,7 +204,7 @@ workflow {
 	// 	}
 	// hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
 	
-
+	bowtie2_build.out.index.dump(pretty: true, tag: "bowtie2_build_ch")
 	bowtie2_input_chx = nevermore_main.out.fastqs
 		// .map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
 		.map { sample, fastqs -> return tuple(sample.sample_id, sample, fastqs) }
