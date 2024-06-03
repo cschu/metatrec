@@ -132,7 +132,7 @@ workflow {
 			meta.id = sample.id
 			meta.sample_id = sample.id.replaceAll(/_.*/, "")
 			meta.library_source = "metaT"
-			// meta.is_paired = sample.is_paired
+			meta.is_paired = sample.is_paired
 			
 			return tuple(meta, file)
 		}
@@ -184,11 +184,7 @@ workflow {
 	nevermore_main(fastq_ch)
 
 	downstream_fq_ch = nevermore_main.out.fastqs
-		.map { sample, fastqs ->
-			def meta = sample.clone()
-			meta.is_paired = [fastqs].flatten().size() == 2
-			return tuple(meta, fastqs)
-		}
+		
 	downstream_fq_ch.dump(pretty: true, tag: "nvm_main_out_ch")
 
 	hisat2_input_ch = Channel.empty()
