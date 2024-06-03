@@ -17,6 +17,7 @@ include { samtools_coverage} from "./metatrec/modules/qc/samtools"
 include { bowtie2_build; bowtie2_align } from "./nevermore/modules/align/bowtie2"
 include { motus; motus_merge } from "./nevermore/modules/profilers/motus"
 include { metaT_megahit; bwa_index; bwa2assembly } from "./metatrec/modules/assembly/megahit"
+include { metaT_trinity } from "./metatrec/modules/assembly/trinity"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -277,6 +278,9 @@ workflow {
 	assembly_input_ch.dump(pretty: true, tag: "assembly_input_ch")
 
 	metaT_megahit(assembly_input_ch, "stage1")
+
+	metaT_trinity(assembly_input_ch, "stage1")
+
 	bwa_index(metaT_megahit.out.contigs)
 
 	bwa2assembly(
