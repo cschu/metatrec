@@ -22,7 +22,7 @@ workflow nevermore_decon {
 
 				sortmerna(for_sortmerna_ch.metaT, params.sortmerna_db)
 				preprocessed_ch = for_sortmerna_ch.metaG
-					.fix(sortmerna.out.fastqs)
+					.mix(sortmerna.out.fastqs)
 
 			} else {
 
