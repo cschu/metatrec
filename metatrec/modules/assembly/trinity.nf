@@ -7,7 +7,7 @@ process metaT_trinity {
 	val(stage)
 
 	output:
-	tuple val(sample), path("assemblies/metaT_trinity/${stage}/${sample.library_source}/${sample.id}/${sample.id}.${stage}.*.fasta"), emit: contigs
+	tuple val(sample), path("assemblies/metaT_trinity/${stage}/${sample.library_source}/${sample.id}/*.fasta"), emit: contigs
 
 	script:
 	def mem_gb = task.memory.toGiga()
@@ -53,6 +53,7 @@ process metaT_trinity {
 
 	}
 	def outdir = "assemblies/metaT_trinity/${stage}/${sample.library_source}/${sample.id}"
+	def mem_gb = task.memory.toGiga()
 	
 	"""
 	mkdir -p ${outdir}/
@@ -60,7 +61,7 @@ process metaT_trinity {
 	${make_left}
 	${make_right}
 
-	Trinity ${input_string} --CPU ${task.cpus} --output ${outdir}
+	Trinity --seqType fq --maxMemory ${mem_gb}G ${input_string} --CPU ${task.cpus} --output ${outdir}
 
 	"""
 	// cp -v megahit_out/final.contigs.fa ${outdir}/${sample.id}.${stage}.transcripts.fasta
