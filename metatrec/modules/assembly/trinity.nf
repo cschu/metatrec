@@ -53,7 +53,6 @@ process metaT_trinity {
 
 	}
 	def outdir = "assemblies/metaT_trinity/${stage}/${sample.library_source}/${sample.id}"
-	def mem_gb = task.memory.toGiga()
 	
 	"""
 	mkdir -p ${outdir}/
