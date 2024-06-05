@@ -15,6 +15,8 @@ workflow nevermore_pack_reads {
 			return tuple(meta, fastqs)
 		}
 
+		fastq_ch.dump(pretty: true, tag: "pack_fastq_ch")
+
 		/*	route all single-read files into a common channel */
 
 		single_ch = fastq_ch
