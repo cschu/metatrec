@@ -243,7 +243,7 @@ workflow {
 	stringtie(align_to_reference.out.alignments)
 	picard_insert_size(
 		align_to_reference.out.alignments
-			.filter { !it[0].id.endsWith("singles") }
+			.filter { !it[0].id.endsWith("singles") && !it[0].id.endsWith("singles.b") }
 	)
 	samtools_coverage(align_to_reference.out.alignments)
 
