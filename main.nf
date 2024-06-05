@@ -265,11 +265,16 @@ workflow {
 	assembly_input_ch = downstream_fq_ch  //nevermore_main.out.fastqs
 		.map { sample, fastqs -> 
 			def meta = sample.clone()
-			meta.id = meta.id.replaceAll(/\.singles$/, "")
-			return tuple(meta, fastqs)
+			meta.id = meta.id.replaceAll(/\.(singles|orphans)$/, "")
+			return tuple(meta.id, meta.sample_id, fastqs)
 		}
-		.groupTuple(size: 2, remainder: true)
-		.map { sample, fastqs -> return tuple(sample, [fastqs].flatten()) }
+		.groupTuple(by: [0, 1], size: 2, remainder: true)
+		.map { sample_protocol_id, sample_id, fastqs -> 
+			def meta = [:]
+			meta.id = sample_protocol_id
+			meta.sample_id = sample_id
+			return tuple(sample, [fastqs].flatten())
+		}
 
 	// nevermore_main.out.fastqs.dump(pretty: true, tag: "nvm_main_out_ch")
 	assembly_input_ch.dump(pretty: true, tag: "assembly_input_ch")
