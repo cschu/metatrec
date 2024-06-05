@@ -61,12 +61,14 @@ process metaT_trinity {
 	def outdir = "assemblies/metaT_trinity/${stage}/${sample.library_source}/${sample.id}"
 	
 	"""
-	mkdir -p ${outdir}/
+	mkdir -p ${outdir}/ trinity/
 
 	${make_left}
 	${make_right}
 
-	Trinity --seqType fq --max_memory ${mem_gb}G ${input_string} --CPU ${task.cpus} --output ${outdir}
+	Trinity --seqType fq --max_memory ${mem_gb}G ${input_string} --CPU ${task.cpus} --output trinity/
+
+	mv -v trinity/* ${outdir}/
 
 	"""
 	// cp -v megahit_out/final.contigs.fa ${outdir}/${sample.id}.${stage}.transcripts.fasta
