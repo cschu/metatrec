@@ -273,7 +273,7 @@ workflow {
 			def meta = [:]
 			meta.id = sample_protocol_id
 			meta.sample_id = sample_id
-			return tuple(sample, [fastqs].flatten())
+			return tuple(meta, [fastqs].flatten())
 		}
 
 	// nevermore_main.out.fastqs.dump(pretty: true, tag: "nvm_main_out_ch")
