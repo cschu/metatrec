@@ -39,7 +39,7 @@ process metaT_trinity {
 			// awk 'NR % 4 == 2 { printf(\">O%s/1\\n%s\\n\", int(NR/4), \$1); }' >> left.fastq"
 		}
 
-		make_right += "gzip -dc ${r2_files[0]} | awk 'NR % 4 == 1 { \$1=$\1"/2" } { print \$0; }' >> right.fastq\n"
+		make_right += "gzip -dc ${r2_files[0]} | awk 'NR % 4 == 1 { \$1=\$\1"/2" } { print \$0; }' >> right.fastq\n"
 		// | awk 'NR % 4 == 2 { printf(\">P%s/2\\n%s\\n\", int(NR/4), \$1); }' >> right.fastq\n"		
 
 	} else if (r1_files.size() != 0) {
