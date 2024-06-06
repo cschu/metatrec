@@ -38,7 +38,7 @@ process metaT_trinity {
 		if (orphans.size() != 0) {
 			// make_left += "gzip -dc ${orphans[0]} | awk 'NR % 4 == 1 { \$1=\$1\"/1\" } { print \$0; }' >> left.fastq\n" 
 			// make_left += "gzip -dc ${orphans[0]} >> left.fastq\n"
-			make_left += "gzip -dc ${orphans[0]} | awk 'NR % 4 == 1 { \$0=\">orphan\"NR//4; } { print \\$0; }' >> left.fastq\n"
+			make_left += "gzip -dc ${orphans[0]} | awk 'NR % 4 == 1 { \$0=\">orphan\"NR//4; } { print \$0; }' >> left.fastq\n"
 			// awk 'NR % 4 == 2 { printf(\">O%s/1\\n%s\\n\", int(NR/4), \$1); }' >> left.fastq"
 		}
 
