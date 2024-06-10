@@ -295,21 +295,21 @@ workflow {
 			)		
 	)
 
-	bwa2assembly(
-		// nevermore_main.out.fastqs
-		downstream_fq_ch
-			.map { sample, assembler, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, assembler, fastqs) }
-			.combine(bwa_index.out.index, by: 0)
-			.map { sample_id, assembler, sample, fastqs, index -> 
-				def meta = sample.clone()
-				meta.index_id = sample_id
-				meta.assembler = assembler
-				return tuple(meta, fastqs, index) 
-			}
-	)
+	// bwa2assembly(
+	// 	// nevermore_main.out.fastqs
+	// 	downstream_fq_ch
+	// 		.map { sample, assembler, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, assembler, fastqs) }
+	// 		.combine(bwa_index.out.index, by: 0)
+	// 		.map { sample_id, assembler, sample, fastqs, index -> 
+	// 			def meta = sample.clone()
+	// 			meta.index_id = sample_id
+	// 			meta.assembler = assembler
+	// 			return tuple(meta, fastqs, index) 
+	// 		}
+	// )
 
-	if (do_preprocessing && params.run_qa) {
-		collate_stats(counts_ch.collect())		
-	}
+	// if (do_preprocessing && params.run_qa) {
+	// 	collate_stats(counts_ch.collect())		
+	// }
 
 }
