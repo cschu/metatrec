@@ -290,8 +290,8 @@ workflow {
 		metaT_megahit.out.contigs
 			.map { sample, contigs -> return tuple(sample, "megahit", contigs) }
 			.mix(
-				metaT_trinity
-					.map { sample, contigs -> return tuple(sample, "trinity", contigs)}
+				metaT_trinity.out.contigs
+					.map { sample, contigs -> return tuple(sample, "trinity", contigs) }
 			)		
 	)
 
