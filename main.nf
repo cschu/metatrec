@@ -286,16 +286,24 @@ workflow {
 
 	metaT_trinity(assembly_input_ch, "stage1")
 
-	bwa_index(metaT_megahit.out.contigs)
+	bwa_index(
+		metaT_megahit.out.contigs
+			.map { sample, contigs -> return tuple(sample, "megahit", contigs) }
+			.mix(
+				metaT_trinity
+					.map { sample, contigs -> return tuple(sample, "trinity", contigs)}
+			)		
+	)
 
 	bwa2assembly(
 		// nevermore_main.out.fastqs
 		downstream_fq_ch
-			.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+			.map { sample, assembler, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, assembler, fastqs) }
 			.combine(bwa_index.out.index, by: 0)
-			.map { sample_id, sample, fastqs, index -> 
+			.map { sample_id, assembler, sample, fastqs, index -> 
 				def meta = sample.clone()
 				meta.index_id = sample_id
+				meta.assembler = assembler
 				return tuple(meta, fastqs, index) 
 			}
 	)
