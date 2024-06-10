@@ -288,28 +288,35 @@ workflow {
 
 	bwa_index(
 		metaT_megahit.out.contigs
-			.map { sample, contigs -> return tuple(sample, "megahit", contigs) }
+			.map { sample, contigs -> 
+				def meta = sample.clone()
+				sample.assembler = "megahit"
+				return tuple(sample, contigs) 
+			}
 			.mix(
 				metaT_trinity.out.contigs
-					.map { sample, contigs -> return tuple(sample, "trinity", contigs) }
+					.map { sample, contigs -> 
+						def meta = sample.clone()
+						meta.assembler = "trinity"
+						return tuple(sample, contigs) 
+					}
 			)		
 	)
 
-	// bwa2assembly(
-	// 	// nevermore_main.out.fastqs
-	// 	downstream_fq_ch
-	// 		.map { sample, assembler, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, assembler, fastqs) }
-	// 		.combine(bwa_index.out.index, by: 0)
-	// 		.map { sample_id, assembler, sample, fastqs, index -> 
-	// 			def meta = sample.clone()
-	// 			meta.index_id = sample_id
-	// 			meta.assembler = assembler
-	// 			return tuple(meta, fastqs, index) 
-	// 		}
-	// )
+	bwa2assembly(
+		// nevermore_main.out.fastqs
+		downstream_fq_ch
+			.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+			.combine(bwa_index.out.index, by: 0)
+			.map { sample_id, sample, fastqs, index -> 
+				def meta = sample.clone()
+				meta.index_id = sample_id
+				return tuple(meta, fastqs, index) 
+			}
+	)
 
-	// if (do_preprocessing && params.run_qa) {
-	// 	collate_stats(counts_ch.collect())		
-	// }
+	if (do_preprocessing && params.run_qa) {
+		collate_stats(counts_ch.collect())		
+	}
 
 }
