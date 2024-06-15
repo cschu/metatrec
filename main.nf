@@ -96,35 +96,6 @@ workflow {
 		Channel.of(null)
 	)
 
-	annotation_ch = Channel.fromPath(params.annotation_input_dir + "/**.{fna,ffn}.gz")
-		.map { file ->
-			// SAMEA112553567_METAG_H5WNWDSXC.UDI027-1.psa_megahit.prodigal.fna.gz
-			// return tuple(file.name.replaceAll(/_.*/, ""), file.name.replaceAll(/\.psa_megahit.prodigal.fna.gz$/, "").replaceAll(/^.+_METAG_/, ""), file)
-			return tuple(file.name.replaceAll(/\.psa_megahit.prodigal.fna.gz$/, ""), file)
-			// return tuple(file.getParent().getName(), file)
-		}
-		.map { sample_id, file -> 
-			def meta = [:]
-			meta.id = sample_id
-			meta.sample_id = sample_id.replaceAll(/_.*/, "")
-			// meta.library_source = "metaT"
-			return tuple(meta, file)
-		}
-
-	assembly_ch = Channel.fromPath(params.assembly_input_dir + "/**.fa.gz")
-		.map { file ->
-			//SAMEA112489502_METAG_H5WNWDSXC.UDI049-1-assembled.fa.gz
-			return tuple(file.name.replaceAll(/-assembled.fa.gz$/, ""), file)
-		}
-		.map { sample_id, file ->
-			def meta = [:]
-			meta.id = sample_id
-			meta.sample_id = sample_id.replaceAll(/_.*/, "")
-			return tuple(meta, file)
-		}
-	
-	annotation_ch.dump(pretty: true, tag: "annotation_ch")
-
 	// SAMEA112489552_METAT-PROK_H5WNWDSXC.UDP0078-4
 	fastq_ch = fastq_input.out.fastqs
 		.map { sample, file -> 
@@ -138,185 +109,221 @@ workflow {
 			return tuple(meta, file)
 		}
 	
-	qc_bbmerge_insert_size(fastq_ch)
-
+	nevermore_main(fastq_ch)
 	fastq_ch.dump(pretty: true, tag: "fastq_ch")
 
-	kallisto_index(
-		annotation_ch			
-	)
-	kallisto_index.out.index.dump(pretty: true, tag: "kallisto_index")
+	if (!params.preprocessing_only) {	
 
-	// hisat2_build(
-	// 	assembly_ch
-	// )
+		annotation_ch = Channel.fromPath(params.annotation_input_dir + "/**.{fna,ffn}.gz")
+			.map { file ->
+				// SAMEA112553567_METAG_H5WNWDSXC.UDI027-1.psa_megahit.prodigal.fna.gz
+				// return tuple(file.name.replaceAll(/_.*/, ""), file.name.replaceAll(/\.psa_megahit.prodigal.fna.gz$/, "").replaceAll(/^.+_METAG_/, ""), file)
+				return tuple(file.name.replaceAll(/\.psa_megahit.prodigal.fna.gz$/, ""), file)
+				// return tuple(file.getParent().getName(), file)
+			}
+			.map { sample_id, file -> 
+				def meta = [:]
+				meta.id = sample_id
+				meta.sample_id = sample_id.replaceAll(/_.*/, "")
+				// meta.library_source = "metaT"
+				return tuple(meta, file)
+			}
 
-	bowtie2_build(
-		assembly_ch
-	)
-
-	// Apr-23 10:49:27.850 [Actor Thread 4] INFO  nextflow.extension.DumpOp - [DUMP: annotation_ch] [
-	// 	{
-	// 		"id": "SAMEA112551184_METAG_H5WNWDSXC.UDI026-1",
-	// 		"sample_id": "SAMEA112551184"
-	// 	},
-	// 	"/g/scb/bork/schudoma/tasks/metatrec.1892.20240422/annotation_input/SAMEA112551184_METAG_H5WNWDSXC.UDI026-1.psa_megahit.prodigal.fna.gz"
-	// ]
-
-
-	kallisto_quant_input_ch = fastq_ch
-		.map { sample, fastqs -> return tuple(sample.sample_id, sample, fastqs) }
-		.combine(
-			kallisto_index.out.index
-				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
-			by: 0
-		)
-		.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
-			def meta = sample_fq.clone()
-			meta.id = sample_ix.id
-			meta.sample_id = sample_ix.sample_id
-			return tuple(meta, fastqs, index)
-		}
-
-	kallisto_quant_input_ch.dump(pretty: true, tag: "kallisto_quant_input_ch")
-	
-	kallisto_quant(kallisto_quant_input_ch)
-	
-	nevermore_main(fastq_ch)
-
-	downstream_fq_ch = nevermore_main.out.fastqs
+		assembly_ch = Channel.fromPath(params.assembly_input_dir + "/**.fa.gz")
+			.map { file ->
+				//SAMEA112489502_METAG_H5WNWDSXC.UDI049-1-assembled.fa.gz
+				return tuple(file.name.replaceAll(/-assembled.fa.gz$/, ""), file)
+			}
+			.map { sample_id, file ->
+				def meta = [:]
+				meta.id = sample_id
+				meta.sample_id = sample_id.replaceAll(/_.*/, "")
+				return tuple(meta, file)
+			}
 		
-	downstream_fq_ch.dump(pretty: true, tag: "nvm_main_out_ch")
+		annotation_ch.dump(pretty: true, tag: "annotation_ch")
 
-	hisat2_input_ch = Channel.empty()
-	// hisat2_input_chx = nevermore_main.out.fastqs
-	// 	.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
-	// 	.combine(
-	// 		hisat2_build.out.index
-	// 			.map { sample, index -> return tuple(sample.sample_id, sample, index) },
-	// 		by: 0
-	// 	)
-	// hisat2_input_chx.dump(pretty: true, tag: "hisat2_input_chx")
+		
+		qc_bbmerge_insert_size(fastq_ch)
 
-	// hisat2_input_ch = hisat2_input_chx
-	// 	.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
-	// 		def meta = sample_ix.clone()
-	// 		// meta.id = sample_ix.id
-	// 		if (sample_fq.id.endsWith(".singles")) {
-	// 			meta.id += ".singles"
-	// 		}
-	// 		// meta.id = sample_fq.id
-	// 		meta.sample_id = sample_ix.sample_id
-	// 		return tuple(meta, fastqs, index, "hisat2")
-	// 	}
-	// hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
-	
-	bowtie2_build.out.index.dump(pretty: true, tag: "bowtie2_build_ch")
-	bowtie2_input_chx = downstream_fq_ch  //nevermore_main.out.fastqs
-		// .map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
-		.map { sample, fastqs -> return tuple(sample.sample_id, sample, fastqs) }
-		.combine(
-			bowtie2_build.out.index
-				.map { sample, index -> return tuple(sample.sample_id, sample, index) },
-			by: 0
+		
+
+		kallisto_index(
+			annotation_ch			
 		)
-	bowtie2_input_chx.dump(pretty: true, tag: "bowtie2_input_chx")
+		kallisto_index.out.index.dump(pretty: true, tag: "kallisto_index")
 
-	bowtie2_input_ch = bowtie2_input_chx
-		.map { sample_id, sample_fq, fastqs, sample_ix, index ->
-			def meta = sample_ix.clone()
-			meta.id += "." + sample_fq.id.replaceAll(/SAMEA[0-9]+_METAT/, "")
-			meta.id += ".b"
-			// if (sample_fq.id.endsWith(".singles")) {
-			// 	meta.id += ".singles"
-			// }
-			meta.sample_id = sample_ix.sample_id + ".b"
-			return tuple(meta, fastqs, index, "bowtie2")
-		}
-	bowtie2_input_ch.dump(pretty: true, tag: "bowtie2_input_ch")
+		// hisat2_build(
+		// 	assembly_ch
+		// )
 
-	
-	align_to_reference(hisat2_input_ch.mix(bowtie2_input_ch))
-
-
-	
-	stringtie(align_to_reference.out.alignments)
-	picard_insert_size(
-		align_to_reference.out.alignments
-			.filter { !it[0].id.endsWith("singles") && !it[0].id.endsWith("singles.b") }
-	)
-	samtools_coverage(align_to_reference.out.alignments)
-
-	counts_ch = nevermore_main.out.readcounts
-	counts_ch = counts_ch.mix(
-			align_to_reference.out.aln_counts
-				.map { sample, file -> return file }
-				.collect()
+		bowtie2_build(
+			assembly_ch
 		)
 
+		// Apr-23 10:49:27.850 [Actor Thread 4] INFO  nextflow.extension.DumpOp - [DUMP: annotation_ch] [
+		// 	{
+		// 		"id": "SAMEA112551184_METAG_H5WNWDSXC.UDI026-1",
+		// 		"sample_id": "SAMEA112551184"
+		// 	},
+		// 	"/g/scb/bork/schudoma/tasks/metatrec.1892.20240422/annotation_input/SAMEA112551184_METAG_H5WNWDSXC.UDI026-1.psa_megahit.prodigal.fna.gz"
+		// ]
 
-	// nevermore_align(downstream_fq_ch)  // nevermore_main.out.fastqs)
 
-	// motus(nevermore_main.out.fastqs, params.motus_db)
-	// motus_merge(
-	// 	motus.out.motus_profile
-	// 		.map { sample, profile -> return profile }
-	// 		.collect(),
-	// 	params.motus_db
-	// )
-
-	assembly_input_ch = downstream_fq_ch  //nevermore_main.out.fastqs
-		.map { sample, fastqs -> 
-			def meta = sample.clone()
-			meta.id = meta.id.replaceAll(/\.(singles|orphans)$/, "")
-			return tuple(meta.id, meta.sample_id, fastqs)
-		}
-		.groupTuple(by: [0, 1], size: 2, remainder: true)
-		.map { sample_protocol_id, sample_id, fastqs -> 
-			def meta = [:]
-			meta.id = sample_protocol_id
-			meta.sample_id = sample_id
-			return tuple(meta, [fastqs].flatten())
-		}
-
-	// nevermore_main.out.fastqs.dump(pretty: true, tag: "nvm_main_out_ch")
-	assembly_input_ch.dump(pretty: true, tag: "assembly_input_ch")
-
-	metaT_megahit(assembly_input_ch, "stage1")
-
-	metaT_trinity(assembly_input_ch, "stage1")
-
-	bwa_index(
-		metaT_megahit.out.contigs
-			.map { sample, contigs -> 
-				def meta = sample.clone()
-				sample.assembler = "megahit"
-				return tuple(sample, contigs) 
+		kallisto_quant_input_ch = fastq_ch
+			.map { sample, fastqs -> return tuple(sample.sample_id, sample, fastqs) }
+			.combine(
+				kallisto_index.out.index
+					.map { sample, index -> return tuple(sample.sample_id, sample, index) },
+				by: 0
+			)
+			.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
+				def meta = sample_fq.clone()
+				meta.id = sample_ix.id
+				meta.sample_id = sample_ix.sample_id
+				return tuple(meta, fastqs, index)
 			}
-			.mix(
-				metaT_trinity.out.contigs
-					.map { sample, contigs -> 
-						def meta = sample.clone()
-						meta.assembler = "trinity"
-						return tuple(sample, contigs) 
-					}
-			)		
-	)
 
-	bwa2assembly(
-		// nevermore_main.out.fastqs
-		downstream_fq_ch
-			.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
-			.combine(bwa_index.out.index, by: 0)
-			.map { sample_id, sample, fastqs, index -> 
-				def meta = sample.clone()
-				meta.index_id = sample_id
-				return tuple(meta, fastqs, index) 
+		kallisto_quant_input_ch.dump(pretty: true, tag: "kallisto_quant_input_ch")
+		
+		kallisto_quant(kallisto_quant_input_ch)
+		
+
+		downstream_fq_ch = nevermore_main.out.fastqs
+			
+		downstream_fq_ch.dump(pretty: true, tag: "nvm_main_out_ch")
+
+		hisat2_input_ch = Channel.empty()
+		// hisat2_input_chx = nevermore_main.out.fastqs
+		// 	.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+		// 	.combine(
+		// 		hisat2_build.out.index
+		// 			.map { sample, index -> return tuple(sample.sample_id, sample, index) },
+		// 		by: 0
+		// 	)
+		// hisat2_input_chx.dump(pretty: true, tag: "hisat2_input_chx")
+
+		// hisat2_input_ch = hisat2_input_chx
+		// 	.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
+		// 		def meta = sample_ix.clone()
+		// 		// meta.id = sample_ix.id
+		// 		if (sample_fq.id.endsWith(".singles")) {
+		// 			meta.id += ".singles"
+		// 		}
+		// 		// meta.id = sample_fq.id
+		// 		meta.sample_id = sample_ix.sample_id
+		// 		return tuple(meta, fastqs, index, "hisat2")
+		// 	}
+		// hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
+		
+		bowtie2_build.out.index.dump(pretty: true, tag: "bowtie2_build_ch")
+		bowtie2_input_chx = downstream_fq_ch  //nevermore_main.out.fastqs
+			// .map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+			.map { sample, fastqs -> return tuple(sample.sample_id, sample, fastqs) }
+			.combine(
+				bowtie2_build.out.index
+					.map { sample, index -> return tuple(sample.sample_id, sample, index) },
+				by: 0
+			)
+		bowtie2_input_chx.dump(pretty: true, tag: "bowtie2_input_chx")
+
+		bowtie2_input_ch = bowtie2_input_chx
+			.map { sample_id, sample_fq, fastqs, sample_ix, index ->
+				def meta = sample_ix.clone()
+				meta.id += "." + sample_fq.id.replaceAll(/SAMEA[0-9]+_METAT/, "")
+				meta.id += ".b"
+				// if (sample_fq.id.endsWith(".singles")) {
+				// 	meta.id += ".singles"
+				// }
+				meta.sample_id = sample_ix.sample_id + ".b"
+				return tuple(meta, fastqs, index, "bowtie2")
 			}
-	)
+		bowtie2_input_ch.dump(pretty: true, tag: "bowtie2_input_ch")
 
-	if (do_preprocessing && params.run_qa) {
-		collate_stats(counts_ch.collect())		
+		
+		align_to_reference(hisat2_input_ch.mix(bowtie2_input_ch))
+
+
+		
+		stringtie(align_to_reference.out.alignments)
+		picard_insert_size(
+			align_to_reference.out.alignments
+				.filter { !it[0].id.endsWith("singles") && !it[0].id.endsWith("singles.b") }
+		)
+		samtools_coverage(align_to_reference.out.alignments)
+
+		counts_ch = nevermore_main.out.readcounts
+		counts_ch = counts_ch.mix(
+				align_to_reference.out.aln_counts
+					.map { sample, file -> return file }
+					.collect()
+			)
+
+
+		// nevermore_align(downstream_fq_ch)  // nevermore_main.out.fastqs)
+
+		// motus(nevermore_main.out.fastqs, params.motus_db)
+		// motus_merge(
+		// 	motus.out.motus_profile
+		// 		.map { sample, profile -> return profile }
+		// 		.collect(),
+		// 	params.motus_db
+		// )
+
+		assembly_input_ch = downstream_fq_ch  //nevermore_main.out.fastqs
+			.map { sample, fastqs -> 
+				def meta = sample.clone()
+				meta.id = meta.id.replaceAll(/\.(singles|orphans)$/, "")
+				return tuple(meta.id, meta.sample_id, fastqs)
+			}
+			.groupTuple(by: [0, 1], size: 2, remainder: true)
+			.map { sample_protocol_id, sample_id, fastqs -> 
+				def meta = [:]
+				meta.id = sample_protocol_id
+				meta.sample_id = sample_id
+				return tuple(meta, [fastqs].flatten())
+			}
+
+		// nevermore_main.out.fastqs.dump(pretty: true, tag: "nvm_main_out_ch")
+		assembly_input_ch.dump(pretty: true, tag: "assembly_input_ch")
+
+		metaT_megahit(assembly_input_ch, "stage1")
+
+		metaT_trinity(assembly_input_ch, "stage1")
+
+		bwa_index(
+			metaT_megahit.out.contigs
+				.map { sample, contigs -> 
+					def meta = sample.clone()
+					sample.assembler = "megahit"
+					return tuple(sample, contigs) 
+				}
+				.mix(
+					metaT_trinity.out.contigs
+						.map { sample, contigs -> 
+							def meta = sample.clone()
+							meta.assembler = "trinity"
+							return tuple(sample, contigs) 
+						}
+				)		
+		)
+
+		bwa2assembly(
+			// nevermore_main.out.fastqs
+			downstream_fq_ch
+				.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+				.combine(bwa_index.out.index, by: 0)
+				.map { sample_id, sample, fastqs, index -> 
+					def meta = sample.clone()
+					meta.index_id = sample_id
+					return tuple(meta, fastqs, index) 
+				}
+		)
+
+		if (do_preprocessing && params.run_qa) {
+			collate_stats(counts_ch.collect())		
+		}
+
 	}
 
 }
