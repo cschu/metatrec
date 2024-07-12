@@ -153,9 +153,9 @@ workflow {
 		)
 		kallisto_index.out.index.dump(pretty: true, tag: "kallisto_index")
 
-		// hisat2_build(
-		// 	assembly_ch
-		// )
+		hisat2_build(
+			assembly_ch
+		)
 
 		bowtie2_build(
 			assembly_ch
