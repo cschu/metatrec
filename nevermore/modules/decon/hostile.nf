@@ -29,6 +29,6 @@ process hostile {
 
     hostile clean --fastq1 ${r1_files[0]} ${r2_input} --aligner ${params.hostile.aligner} --index \$(readlink ${db}) --threads ${task.cpus} --out-dir no_host/${sample.id} --force 
     
-    find no_host/ -type f | xargs -I {} sh -c 'mv -v {} \$(dirname {})/\$(basename {} .clean.fastq.gz).fastq.gz'
+    find no_host/ -type f | xargs -I {} sh -c 'mv -v {} \$(dirname {})/\$(basename {} .fastq.gz | sed "s/clean\\(_[12]\\)\\?\$//).fastq.gz'
     """
 }
