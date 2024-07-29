@@ -193,9 +193,33 @@ workflow {
 			
 		downstream_fq_ch.dump(pretty: true, tag: "nvm_main_out_ch")
 
-		hisat2_input_ch = Channel.empty()
-		hisat2_input_chx = nevermore_main.out.fastqs
-			.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+		// hisat2_input_ch = Channel.empty()
+		// hisat2_input_chx = nevermore_main.out.fastqs
+		// 	.map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+		// 	.combine(
+		// 		hisat2_build.out.index
+		// 			.map { sample, index -> return tuple(sample.sample_id, sample, index) },
+		// 		by: 0
+		// 	)
+		// hisat2_input_chx.dump(pretty: true, tag: "hisat2_input_chx")
+
+		// hisat2_input_ch = hisat2_input_chx
+		// 	.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
+		// 		def meta = sample_ix.clone()
+		// 		// meta.id = sample_ix.id
+		// 		if (sample_fq.id.endsWith(".singles")) {
+		// 			meta.id += ".singles"
+		// 		}
+		// 		// meta.id = sample_fq.id
+		// 		meta.sample_id = sample_ix.sample_id
+		// 		return tuple(meta, fastqs, index, "hisat2")
+		// 	}
+		// hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
+		/* HISAT2 */
+		hisat2_build.out.index.dump(pretty: true, tag: "hisat2_build_ch")
+		hisat2_input_chx = downstream_fq_ch  //nevermore_main.out.fastqs
+			// .map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+			.map { sample, fastqs -> return tuple(sample.sample_id, sample, fastqs) }
 			.combine(
 				hisat2_build.out.index
 					.map { sample, index -> return tuple(sample.sample_id, sample, index) },
@@ -204,18 +228,19 @@ workflow {
 		hisat2_input_chx.dump(pretty: true, tag: "hisat2_input_chx")
 
 		hisat2_input_ch = hisat2_input_chx
-			.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
+			.map { sample_id, sample_fq, fastqs, sample_ix, index ->
 				def meta = sample_ix.clone()
-				// meta.id = sample_ix.id
-				if (sample_fq.id.endsWith(".singles")) {
-					meta.id += ".singles"
-				}
-				// meta.id = sample_fq.id
-				meta.sample_id = sample_ix.sample_id
+				meta.id += "." + sample_fq.id.replaceAll(/SAMEA[0-9]+_METAT/, "")
+				meta.id += ".b"
+				// if (sample_fq.id.endsWith(".singles")) {
+				// 	meta.id += ".singles"
+				// }
+				meta.sample_id = sample_ix.sample_id + ".b"
 				return tuple(meta, fastqs, index, "hisat2")
 			}
 		hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
-		
+
+		/* BOWTIE2 */
 		bowtie2_build.out.index.dump(pretty: true, tag: "bowtie2_build_ch")
 		bowtie2_input_chx = downstream_fq_ch  //nevermore_main.out.fastqs
 			// .map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
