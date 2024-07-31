@@ -8,11 +8,11 @@ process quast {
 	script:
 	"""
 
-	if [[ ! -f ${sample.id}.assembly.fasta ]]; then
-		ln -s ${assembly} ${sample.id}.assembly.fasta
+	if [[ ! -f ${sample.id}.${assembly} ]]; then
+		ln -s ${assembly} ${sample.id}.${assembly}
 	fi
 
-	quast -t ${task.cpus} -o ${sample.id} ${sample.id}.assembly.fasta
+	quast -t ${task.cpus} -o ${sample.id} ${sample.id}.${assembly}
 	"""
 
 
