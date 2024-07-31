@@ -18,6 +18,7 @@ include { bowtie2_build; bowtie2_align } from "./nevermore/modules/align/bowtie2
 include { motus; motus_merge } from "./nevermore/modules/profilers/motus"
 include { metaT_megahit; bwa_index; bwa2assembly } from "./metatrec/modules/assembly/megahit"
 include { metaT_trinity } from "./metatrec/modules/assembly/trinity"
+include { quast } from "./metatrec/modules/assembly/quast"
 
 
 if (params.input_dir && params.remote_input_dir) {
@@ -314,6 +315,8 @@ workflow {
 		metaT_megahit(assembly_input_ch, "stage1")
 
 		metaT_trinity(assembly_input_ch, "stage1")
+
+		quast(metaT_megahit.out.contigs.mix(metaT_trinity.out.contigs))
 
 		bwa_index(
 			metaT_megahit.out.contigs
