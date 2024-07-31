@@ -8,7 +8,7 @@ process quast {
 	script:
 	"""
 
-	quast -o ${sample.id} ${assembly}
+	quast -t ${task.cpus} -o ${sample.id} ${assembly}
 	"""
 
 
