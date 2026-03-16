@@ -1,5 +1,9 @@
 process merge_single_fastqs {
-    container "docker://quay.io/biocontainers/bbmap:39.06--h92535d8_0"
+    container "quay.io/biocontainers/bbmap:39.06--h92535d8_0"
+    label "medium"
+    tag "${sample.id}"
+    time { 8.h * task.attempt }
+    memory {4.GB * task.attempt}
 
     input:
     tuple val(sample), path(fastqs)
@@ -19,12 +23,13 @@ process merge_single_fastqs {
     } else {
         fastq_in = "${fastqs[0]}"
     }
+    def maxmem = task.memory.toGiga()
 
     """
     set -e -o pipefail
     mkdir -p merged/
 
-    ${prefix} sortbyname.sh in=${fastq_in} out=merged/${sample.id}_R1.fastq.gz ${suffix}
+    ${prefix} sortbyname.sh -Xmx${maxmem}g -da qin=33 in=${fastq_in} out=merged/${sample.id}_R1.fastq.gz ${suffix}
     """
     // https://stackoverflow.com/questions/22464786/ignoring-bash-pipefail-for-error-code-141/72985727#72985727
 }

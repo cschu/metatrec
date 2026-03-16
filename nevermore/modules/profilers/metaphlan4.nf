@@ -1,5 +1,9 @@
 process run_metaphlan4 {
-	container "docker://quay.io/biocontainers/metaphlan:4.1.0--pyhca03a8a_0"
+	publishDir params.output_dir, mode: "copy"
+	container "quay.io/biocontainers/metaphlan:4.1.0--pyhca03a8a_0"
+	tag "${sample.id}"
+	label "process_high"
+	label "metaphlan4"
 	
 	input:
 	tuple val(sample), path(fastqs)
@@ -11,7 +15,7 @@ process run_metaphlan4 {
 	// tuple val(sample), path("${sample.id}.bowtie2.bz2"), emit: mp4_bt2
 	
 	script:
-	def mp4_params = "--bowtie2db ${mp4_db} --input_type fastq --nproc ${task.cpus} --tmp_dir tmp/"
+	def mp4_params = "--bowtie2db ${mp4_db} --input_type fastq --nproc ${task.cpus} --tmp_dir tmp/ --offline"
 	def mp4_input = ""
 	def bt2_out = "--bowtie2out ${sample.id}.bowtie2.bz2"
 
@@ -54,7 +58,7 @@ process run_metaphlan4 {
 	"""
 	mkdir -p tmp/
 
-	metaphlan ${mp4_input} ${mp4_params} ${bt2_out} -o ${sample.id}.mp4.txt ${samestr_params}
+	metaphlan ${mp4_input} ${mp4_params} ${bt2_out} -o ${sample.id}.mp4.txt ${samestr_params} -t rel_ab
 	touch ${sample.id}.mp4.sam.bz2
 	"""
 }
@@ -78,7 +82,8 @@ process run_metaphlan4 {
 
 
 process combine_metaphlan4 {
-	container "docker://quay.io/biocontainers/metaphlan:4.1.0--pyhca03a8a_0"
+	container "quay.io/biocontainers/metaphlan:4.1.0--pyhca03a8a_0"
+	label "metaphlan4"
 
 	input:
 	tuple val(sample), path(bt2)
@@ -99,7 +104,10 @@ process combine_metaphlan4 {
 
 
 process collate_metaphlan4_tables {
-	container "docker://quay.io/biocontainers/metaphlan:4.1.0--pyhca03a8a_0"
+	publishDir params.output_dir, mode: "copy"
+	container "quay.io/biocontainers/metaphlan:4.1.0--pyhca03a8a_0"
+	label "metaphlan4"
+	label "mini"
 
 	input:
 	path(tables)

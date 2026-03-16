@@ -1,5 +1,5 @@
 process qc_bbmerge {
-    container "docker://quay.io/biocontainers/bbmap:39.06--h92535d8_0"
+    container "quay.io/biocontainers/bbmap:39.06--h92535d8_0"
     label "bbduk"
 
     input:
@@ -24,7 +24,7 @@ params.bbmerge_insert_size = "ecct extend2=20 iterations=5 k=62 adapter=default"
 
 
 process qc_bbmerge_insert_size {
-    container "docker://quay.io/biocontainers/bbmap:39.06--h92535d8_0"
+    container "quay.io/biocontainers/bbmap:39.06--h92535d8_0"
     label "bbduk"
 
     input:

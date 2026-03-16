@@ -8,11 +8,13 @@ workflow nevermore_pack_reads {
 	
 	main:
 
+		/* re-add pair information, which might have been lost upstream */
+
 		fastq_ch = fastq_ch
 			.map { sample, fastqs ->
 			def meta = sample.clone()
 			meta.is_paired = [fastqs].flatten().size() == 2
-			return tuple(meta, fastqs)
+			return  [ meta, fastqs ]
 		}
 
 		fastq_ch.dump(pretty: true, tag: "pack_fastq_ch")
@@ -25,7 +27,7 @@ workflow nevermore_pack_reads {
 				def meta = sample.clone()
 				meta.id = fastq.name.replaceAll(/_R1.fastq.gz$/, "")
 				meta.merged = false
-				return tuple(meta, fastq)
+				return [ meta, fastq ]
 			}
 
 		/*	route all paired-end read files into a common channel */
@@ -35,7 +37,7 @@ workflow nevermore_pack_reads {
 			.map { sample, fastq ->
 				def meta = sample.clone()
 				meta.merged = true
-				return tuple(meta, fastq)
+				return [ meta, fastq ]
 			}
 
 		/*	group all single-read files by sample and route into merge-channel */
@@ -43,8 +45,9 @@ workflow nevermore_pack_reads {
 		single_ch
 			.map {
 				sample, fastq ->
-					sample.id = sample.id.replaceAll(/.(orphans|singles|chimeras)$/, ".singles")
-					return tuple(sample, fastq)
+					def meta = sample.clone()
+					meta.id = sample.id.replaceAll(/.(orphans|singles|chimeras)$/, ".singles")
+					return [ meta, fastq ]
 			}
 			.branch {
 				single_end: it[0].library == "single"
@@ -52,21 +55,45 @@ workflow nevermore_pack_reads {
 			}
 		.set { single_reads_ch }
 
-		def se_group_size = 2 - (params.drop_orphans ? 1 : 0)
+		def orphan_merge = !params.single_end_libraries && !params.drop_orphans && params.run_preprocessing //&& params.remove_host;
+		def se_group_size = 2 - ((orphan_merge) ? 0 : 1);
 
 		single_reads_ch.paired_end
-			.groupTuple(sort: true, size: se_group_size, remainder: true)
 			.branch {
-				do_merge: it[1].size() > 1
+				do_merge: it[0].multilib
 				no_merge: true
 			}
 			.set { pe_singles_ch }
 
 		merged_single_ch = pe_singles_ch.do_merge
+			// .map { meta, fastq -> [ meta.id, meta.library_source, fastq ] }
+			.map { meta, fastq -> [ meta.id, fastq ] }
+			// .groupTuple(by: [0, 1], sort: true, size: se_group_size, remainder: true)
+			.groupTuple(by: 0, sort: true, size: se_group_size, remainder: true)
+			// .map { sample_id, library_source, fastqs ->
+			.map { sample_id, fastqs ->
+				def meta = [:]
+				meta.id = sample_id
+				meta.is_paired = false
+				meta.library = "paired"
+				meta.library_source = (sample_id.endsWith(".metaT") ? "metaT" : ((sample_id.endsWith(".metaG")) ? "metaG": null)) //library_source
+				meta.merged = true
+				meta.multilib = true
+
+				return [meta, [fastqs].flatten()]
+			}
+
+		merged_single_ch.dump(pretty: true, tag: "merged_single_ch")
 
 		/*	then merge single-read file groups into single files */
 
-		merge_single_fastqs(merged_single_ch)
+		merged_ch = Channel.empty()
+		if (!params.single_end_libraries) {
+
+			merge_single_fastqs(merged_single_ch)
+			merged_ch = merge_single_fastqs.out.fastq
+
+		} 
 
 		/* 	take all single-read files except for the qc-survivors,
 			concat with merged single-read files (takes care of single-end qc-survivors),
@@ -81,17 +108,17 @@ workflow nevermore_pack_reads {
 				def meta = sample.clone()
 				meta.id = fastq.name.replaceAll(/_R1.fastq.gz$/, "")
 				meta.merged = false
-				return tuple(meta, fastq)
+				return [ meta, fastq ]
 			}
-			.concat(pe_singles_ch.no_merge)
-			.concat(single_reads_ch.single_end)
-			.concat(paired_ch)
-			.concat(merge_single_fastqs.out.fastq)
+			.mix(pe_singles_ch.no_merge)         // raw PE library orphans
+			.mix(single_reads_ch.single_end)     // SE library reads
+			.mix(paired_ch)                      // PE library pairs
+			.mix(merged_ch)                      // merged preprocessed PE library orphans
 
 		fastq_prep_ch = paired_ch
-			.concat(single_reads_ch.single_end)
-			.concat(pe_singles_ch.no_merge)
-			.concat(merge_single_fastqs.out.fastq)
+			.mix(single_reads_ch.single_end)
+			.mix(pe_singles_ch.no_merge)
+			.mix(merged_ch)
 
 	emit:
 		fastqs = fastq_prep_ch
