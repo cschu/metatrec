@@ -15,9 +15,21 @@ def keep_orphans = (params.keep_orphans || false)
 
 def asset_dir = "${projectDir}/nevermore/assets"
 
-params.subsample = [:]
+// this nonsense parameter-rearrangement is necessary for nf-core schema/clowm compatibility
 
-print asset_dir
+print "PARAMS_IN_PREP_BEFORE: ${params}"
+
+params.subsample_subset = null
+params.subsample_percentile = 100.0
+params.subsample = [:]
+if (!params.subsample.subset) {
+	params.subsample.subset = params.subsample_subset
+}
+if (!params.subsample.percentile) {
+	params.subsample.percentile = params.subsample_percentile
+}
+
+print "PARAMS_IN_PREP_AFTER: ${params}"
 
 process concat_singles {
     input:
@@ -42,7 +54,7 @@ workflow nevermore_simple_preprocessing {
 
 	main:
 		rawcounts_ch = Channel.empty()
-		if (params.run_qa || params.subsample.subset) {
+		if (params.run_qa || (params.subsample.subset && params.subsample.percentile < 100.0 && params.subsample.percentile > 0.0)) {
 
 			fastqc(fastq_ch, "raw")
 			rawcounts_ch = fastqc.out.counts
@@ -55,7 +67,9 @@ workflow nevermore_simple_preprocessing {
 				)
 			}
 
-			if (params.subsample.subset) {
+			if (params.subsample.subset && params.subsample.percentile < 100.0 && params.subsample.percentile > 0.0) {
+
+				fastq_ch.dump(pretty: true, tag: "fastq_ch")
 				
 				fastq_ch
 					.branch {
@@ -63,10 +77,13 @@ workflow nevermore_simple_preprocessing {
 						no_subsample: true
 					}
 					.set { check_subsample_ch }
+
+				check_subsample_ch.subsample.dump(pretty: true, tag: "check_subsample_ch")
+				check_subsample_ch.no_subsample.dump(pretty: true, tag: "check_no_subsample_ch")
 				// subsample_ch = fastq_ch
 				// 	.filter { params.subsample.subset == "all" || it[0].library_source == params.subsample.subset }
 				// subsample_ch.dump(pretty: true, tag: "subsample_ch")
-
+				
 				calculate_library_size_cutoff(
 					fastqc.out.counts
 						.filter { params.subsample.subset == "all" || it[0].library_source == params.subsample.subset }
@@ -77,16 +94,14 @@ workflow nevermore_simple_preprocessing {
 				calculate_library_size_cutoff.out.library_sizes.view()
 
 				css_ch = check_subsample_ch.subsample
-					.map { sample, fastqs -> return tuple(sample.id, sample, fastqs) }
+					.map { sample, fastqs ->  [ sample.id, sample, fastqs ] }
 					.join(
 						
 						calculate_library_size_cutoff.out.library_sizes
 							.splitCsv(header: true, sep: '\t', strip: true)
-							.map { row ->
-								return tuple(row.sample, row.do_subsample == "1", row.target_size)
-							},
-							by: 0,
-							remainder: true						
+							.map { row -> [ row.sample, row.do_subsample == "1", row.target_size ] },
+						by: 0,
+						remainder: true						
 					)
 
 				css_ch.dump(pretty: true, tag: "css_ch")
@@ -95,18 +110,14 @@ workflow nevermore_simple_preprocessing {
 				// for some reason, .branch does not work here :S
 				subsample_ch = css_ch
 					.filter { it[3] }
-					.map { sample_id, sample, fastqs, do_subsample, target_size ->
-						return tuple(sample, fastqs, target_size)
-					}
+					.map { sample_id, sample, fastqs, do_subsample, target_size -> [ sample, fastqs, target_size ] }
 				subsample_ch.dump(pretty: true, tag: "subsample_ch")
 
 				subsample_reads(subsample_ch)
 
 				do_not_subsample_ch = css_ch
 					.filter { !it[3] }
-					.map { sample_id, sample, fastqs, do_subsample, target_size ->
-						return tuple(sample, fastqs)
-					}
+					.map { sample_id, sample, fastqs, do_subsample, target_size -> [ sample, fastqs ] }
 					.mix(
 						check_subsample_ch.no_subsample
 					)
@@ -138,7 +149,7 @@ workflow nevermore_simple_preprocessing {
 					def meta = sample.clone()
 					meta.id = sample.id + ".orphans"
 					meta.is_paired = false
-					return tuple(meta, file)
+					return [ meta, file ]
 				}
 
 		}

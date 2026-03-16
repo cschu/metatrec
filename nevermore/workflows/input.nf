@@ -1,13 +1,11 @@
 nextflow.enable.dsl=2
 
 include { classify_sample; classify_sample_with_library_info } from "../modules/functions"
-
+include { bam2fq } from "../modules/converters/bam2fq"
 
 params.bam_input_pattern = "**.bam"	
 
 def bam_suffix_pattern = params.bam_input_pattern.replaceAll(/\*/, "")
-
-def input_dir = (params.input_dir) ? params.input_dir : params.remote_input_dir
 
 
 process transfer_fastqs {
@@ -36,13 +34,16 @@ process transfer_bams {
 
 
 process prepare_fastqs {
+	// container "ghcr.io/astral-sh/uv:python3.14-trixie-slim"
+	// container "registry.git.embl.org/schudoma/portraits_metatraits:latest"
+	container "quay.io/biocontainers/pandas:2.2.1"
+	label "default"
 
 	input:
-		path(files)
-		val(remote_input)
-		val(library_suffix)
+		tuple val(sample), path(files), val(remote_input), val(library_suffix)
 	output:
-		path("fastq/*/*.fastq.{gz,bz2}"), emit: fastqs
+		tuple val(sample), path("fastq/**.fastq.{gz,bz2}"), emit: pairs, optional: true
+		tuple val(sample), path("fastq/**.fastq.{gz,bz2}"), emit: singles, optional: true
 		path("sample_library_info.txt"), emit: library_info
 
   script:
@@ -55,14 +56,11 @@ process prepare_fastqs {
 		def libsfx_param = (library_suffix != null) ? "--add_sample_suffix ${library_suffix}" : ""
 		
 		"""
-		prepare_fastqs.py -i . -o fastq/ -p ${input_dir_prefix} ${custom_suffixes} ${remote_option} ${remove_suffix} ${libsfx_param}
+		mkdir -p reads/${sample}
+		ls ${files} | xargs -I{} sh -c 'ln -s ../../{} reads/${sample}/'
+		prepare_fastqs.py -i reads -o fastq -p ${input_dir_prefix} ${custom_suffixes} ${remote_option} ${remove_suffix} ${libsfx_param}
 		"""
 }
-
-
-
-
-
 
 
 workflow remote_fastq_input {
@@ -96,32 +94,63 @@ workflow fastq_input {
 		libsfx
 	
 	main:
-		prepare_fastqs(fastq_ch.collect(), (params.remote_input_dir != null || params.remote_input_dir), libsfx)
+		if (params.input_dir_structure == "flat") {
+			fastq_ch = fastq_ch
+				.map { file -> [ 
+					file.getName()
+						.replaceAll(/\.(fastq|fq)(\.(gz|bz2))?$/, "")
+						.replaceAll(/[._]R?[12]$/, "")
+						.replaceAll(/[._]singles$/, ""),
+					file
+				] }
+
+		} else {
+			fastq_ch = fastq_ch
+				.map { file -> [ file.getParent().getName(), file ] }
+		}
+
+		fastq_ch = fastq_ch
+			.groupTuple(by: 0)
+			.combine(libsfx)
+			.map { sample_id, files, suffix -> 
+				return [ 
+					((suffix == null) ? sample_id : "${sample_id}.${suffix}"), files, (params.remote_input_dir != null || params.remote_input_dir), null ]
+			}
+
+		if (params.ignore_samples) {
+			ignore_samples = params.ignore_samples.split(",")
+			print "Ignoring samples: ${ignore_samples}"
+			fastq_ch = fastq_ch
+				.filter { !ignore_samples.contains(it[0]) }
+		}
+
+		fastq_ch.dump(pretty: true, tag: "fastq_ch")
+		prepare_fastqs(fastq_ch)
+		prepare_fastqs.out.singles.mix(prepare_fastqs.out.pairs).dump(pretty: true, tag: "prepare_fastqs_out")
 
 		library_info_ch = prepare_fastqs.out.library_info
 			.splitCsv(header:false, sep:'\t', strip:true)
-			.map { row -> 
-				return tuple(row[0], row[1])
-			}
+			.map { row -> [ row[0], row[1], row[2] ] }
 
-		fastq_ch = prepare_fastqs.out.fastqs
-			.flatten()
-			.map { file -> 
-				def sample = file.getParent().getName()
-				return tuple(sample, file)
-			}
-			.groupTuple(sort: true)
-			.join(library_info_ch, remainder: true)
-			.map { sample_id, files, library_is_paired ->
+		prepped_fastq_ch = prepare_fastqs.out.singles
+			.map { sample_id, files -> [ "${sample_id}.singles", files, false ] }
+			.mix(prepare_fastqs.out.pairs
+				.map { sample_id, files -> [ sample_id, files, true ] }
+			)
+			.join(by: 0, library_info_ch)
+			.map { sample_id, files, is_paired, library_is_paired, n_parts ->
 				def meta = [:]
 				meta.id = sample_id
-				meta.is_paired = (files instanceof Collection && files.size() == 2)
+				meta.is_paired = is_paired
 				meta.library = (library_is_paired == "1") ? "paired" : "single"
-				return tuple(meta, files)
+				meta.multilib = n_parts != "1"
+				return [ meta, [files].flatten() ]
 			}
 
+		prepped_fastq_ch.dump(pretty: true, tag: "prepped_fastq_ch")
+
 	emit:
-		fastqs = fastq_ch
+		fastqs = prepped_fastq_ch
 }
 
 
@@ -137,14 +166,14 @@ workflow bam_input {
 		bam_ch = bam_ch
 			.map { file ->
 				def sample = file.name.replaceAll(bam_suffix_pattern, "").replaceAll(/\.$/, "")
-				return tuple(sample, file)
+				return [ sample, file ]
 			}
 			.groupTuple(sort: true)
 			.map { classify_sample(it[0], it[1]) }
 
 		fastq_ch = Channel.empty()
 		if (params.do_bam2fq_conversion) {
-			bam2fq(bam_ch)
+			bam2fq(bam_ch, false)
 			fastq_ch = bam2fq.out.reads
 				.map { classify_sample(it[0].id, it[1]) }
 		}
@@ -152,4 +181,3 @@ workflow bam_input {
 		bamfiles = bam_ch
 		fastqs = fastq_ch
 }
-
