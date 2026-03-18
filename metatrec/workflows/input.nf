@@ -1,3 +1,5 @@
+include { prepare_fastqs } from "../../nevermore/workflows/input"
+
 workflow handle_input {		
 
 	main:
