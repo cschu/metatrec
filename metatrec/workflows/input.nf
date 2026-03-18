@@ -12,7 +12,7 @@ workflow handle_input {
 				.map { row -> 
 					def meta = [:]
 					meta.id = row.id
-					meta.source = row.source
+					// meta.source = row.source
 					meta.library_source = "metaT"
 					def reads = null
 					if (row.r1 != null && row.r2 != null) {
@@ -30,7 +30,7 @@ workflow handle_input {
 							reads = [ row.singles ]
 						}
 					}
-					return [ meta, source, reads, row.contigs, row.genes ]
+					return [ meta, row.source, reads, row.contigs, row.genes ]
 				}
 				.filter { sample[2] != null }
 
