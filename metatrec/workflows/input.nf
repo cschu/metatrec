@@ -32,7 +32,7 @@ workflow handle_input {
 					}
 					return [ meta, row.source, reads, row.contigs, row.genes ]
 				}
-				.filter { sample[2] != null }
+				.filter { it[2] != null }
 
 			prepare_fastqs(
 				samples_ch.map { meta, source, reads, contigs, genes -> [ meta.id, reads, params.remote_input_dir, null ] }
