@@ -47,27 +47,27 @@ workflow align_to_reference {
 		bowtie2_align(bowtie2_input_ch)
 
 		
-		downstream_fq_ch  //nevermore_main.out.fastqs
-			// .map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
-			.map { sample, fastqs -> return tuple(sample.id, sample, fastqs) }
-			.combine(
-				hisat2_build.out.index
-					.map { sample, index -> return tuple(sample.id, sample, index) },
-				by: 0
-			)
-		hisat2_input_chx.dump(pretty: true, tag: "hisat2_input_chx")
+		// downstream_fq_ch  //nevermore_main.out.fastqs
+		// 	// .map { sample, fastqs -> return tuple(sample.id.replaceAll(/\.singles$/, ""), sample, fastqs) }
+		// 	.map { sample, fastqs -> return tuple(sample.id, sample, fastqs) }
+		// 	.combine(
+		// 		hisat2_build.out.index
+		// 			.map { sample, index -> return tuple(sample.id, sample, index) },
+		// 		by: 0
+		// 	)
+		// hisat2_input_chx.dump(pretty: true, tag: "hisat2_input_chx")
 
-		hisat2_input_ch = hisat2_input_chx
-			.map { sample_id, sample_fq, fastqs, sample_ix, index ->
-				def meta = sample_ix.clone()
-				meta.id += "." + sample_fq.id.replaceAll(/SAMEA[0-9]+_METAT/, "")
-				// if (sample_fq.id.endsWith(".singles")) {
-				// 	meta.id += ".singles"
-				// }
-				meta.sample_id = sample_ix.sample_id
-				return tuple(meta, fastqs, index, "hisat2")
-			}
-		hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
+		// hisat2_input_ch = hisat2_input_chx
+		// 	.map { sample_id, sample_fq, fastqs, sample_ix, index ->
+		// 		def meta = sample_ix.clone()
+		// 		meta.id += "." + sample_fq.id.replaceAll(/SAMEA[0-9]+_METAT/, "")
+		// 		// if (sample_fq.id.endsWith(".singles")) {
+		// 		// 	meta.id += ".singles"
+		// 		// }
+		// 		meta.sample_id = sample_ix.sample_id
+		// 		return tuple(meta, fastqs, index, "hisat2")
+		// 	}
+		// hisat2_input_ch.dump(pretty: true, tag: "hisat2_input_ch")
 
 
 		/***/
