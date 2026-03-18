@@ -38,9 +38,12 @@ workflow handle_input {
 				samples_ch.map { meta, source, reads, contigs, genes -> [ meta.id, reads, params.remote_input_dir, null ] }
 			)
 
+			prepare_fastqs.out.pairs.mix(prepare_fastqs.out.singles).dump(pretty: true, tag: "prepare_fastqs")
+
 			samples_ch = samples_ch.map { sample -> [ sample[0].id, sample ] }
 				.combine(prepare_fastqs.out.pairs.mix(prepare_fastqs.out.singles), by: 0)
 				.map { sample_id, sample, reads -> [ sample[0], sample[1], reads, sample[3], sample[4] ] }
+			samples_ch.dump(pretty: true, tag: "samples_ch")
 	
 		} else {
 
