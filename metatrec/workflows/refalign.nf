@@ -1,6 +1,7 @@
 include { bowtie2_build; bowtie2_align } from "../../nevermore/modules/align/bowtie2"
 include { hisat2_build; hisat2_align } from "../../nevermore/modules/align/hisat2"
 include { merge_and_sort } from "../../nevermore/modules/align/helpers"
+include { prepare_fastqs } from "../../nevermore/workflows/input"
 
 
 workflow align_to_reference {
