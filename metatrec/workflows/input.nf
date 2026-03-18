@@ -14,8 +14,6 @@ workflow handle_input {
 					meta.id = row.id
 					meta.source = row.source
 					meta.library_source = "metaT"
-					meta.is_paired = sample.is_paired
-					meta.library = sample.library
 					def reads = null
 					if (row.r1 != null && row.r2 != null) {
 						meta.is_paired = true
