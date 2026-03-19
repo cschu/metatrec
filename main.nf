@@ -87,7 +87,7 @@ workflow {
 		nevermore_main.out.fastqs.dump(pretty: true, tag: "preprocessed_fastqs")
 		
 		prep_samples_ch = samples_ch
-			.map { sample -> [ sample[0], sample ] }
+			.map { sample -> [ sample[0].id, sample ] }
 			.combine(
 				nevermore_main.out.fastqs
 					.map { sample, reads -> [ sample.id, reads ] },
