@@ -83,6 +83,8 @@ workflow {
 		kallisto_quant_input_ch.dump(pretty: true, tag: "kallisto_quant_input_ch")
 		
 		kallisto_quant(kallisto_quant_input_ch)
+
+		nevermore_main.out.fastqs.dump(pretty: true, tag: "preprocessed_fastqs")
 		
 		prep_samples_ch = samples_ch
 			.map { sample -> [ sample[0], sample ] }
@@ -94,6 +96,8 @@ workflow {
 			.map { sample_id, meta, source, raw_reads, contigs, genes, reads ->
 				return [ meta, source, reads, contigs, genes ]
 			}
+		
+		prep_samples_ch.dump(pretty: true, tag: "prep_samples_ch")
 
 		// align_to_reference(hisat2_input_ch.mix(bowtie2_input_ch))
 		align_to_reference(prep_samples_ch)
