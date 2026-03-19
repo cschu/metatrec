@@ -93,9 +93,9 @@ workflow {
 					.map { sample, reads -> [ sample.id, reads ] },
 				by: 0
 			)
-			.map { sample_id, meta, source, raw_reads, contigs, genes, reads ->
-				return [ meta, source, reads, contigs, genes ]
-			}
+			// .map { sample_id, meta, source, raw_reads, contigs, genes, reads ->
+			// 	return [ meta, source, reads, contigs, genes ]
+			// }
 		
 		prep_samples_ch.dump(pretty: true, tag: "prep_samples_ch")
 
