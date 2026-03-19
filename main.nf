@@ -90,12 +90,53 @@ workflow {
 			.map { sample -> [ sample[0].id, sample ] }
 			.combine(
 				nevermore_main.out.fastqs
-					.map { sample, reads -> [ sample.id, reads ] },
+					.map { sample, reads -> [ sample.id, sample, reads ] },
 				by: 0
 			)
+			.map { sample_id, sample_raw, sample_prep, reads ->
+				return [ sample_prep, sample_raw[1], reads, sample_raw[3], sample_raw[4] ]
+			}
 			// .map { sample_id, meta, source, raw_reads, contigs, genes, reads ->
 			// 	return [ meta, source, reads, contigs, genes ]
 			// }
+		
+
+		// [DUMP: preprocessed_fastqs] [
+		// 	{
+		// 		"id": "SAMEA112490973",
+		// 		"library_source": "metaT",
+		// 		"is_paired": "true",
+		// 		"library": "paired",
+		// 		"merged": "true"
+		// 	},
+		// 	[
+		// 		"/scratch/schudoma/WORK/metatrec/5c/0fdc4cd4742cbc8a3210d60843fd7b/qc_reads/SAMEA112490973/SAMEA112490973_R1.fastq.gz",
+		// 		"/scratch/schudoma/WORK/metatrec/5c/0fdc4cd4742cbc8a3210d60843fd7b/qc_reads/SAMEA112490973/SAMEA112490973_R2.fastq.gz"
+		// 	]
+		// ]
+
+		// [DUMP: prep_samples_ch] [
+		// 	"SAMEA112490973",
+		// 	[
+		// 		{
+		// 			"id": "SAMEA112490973",
+		// 			"library_source": "metaT",
+		// 			"is_paired": "true",
+		// 			"library": "paired"
+		// 		},
+		// 		"prokaryote",
+		// 		[
+		// 			"/scratch/schudoma/WORK/metatrec/a9/a819fdc64ccd29d9198415ec053d50/fastq/SAMEA112490973/SAMEA112490973_R1.fastq.gz",
+		// 			"/scratch/schudoma/WORK/metatrec/a9/a819fdc64ccd29d9198415ec053d50/fastq/SAMEA112490973/SAMEA112490973_R2.fastq.gz"
+		// 		],
+		// 		"/g/bork6/schudoma/data_processing/trec/amr/input/assemblies/SAMEA112490973-assembled.fa.gz",
+		// 		"/g/bork6/schudoma/data_processing/trec/amr/input/genes/SAMEA112490973.psa_megahit.prodigal.fna.gz"
+		// 	],
+		// 	[
+		// 		"/scratch/schudoma/WORK/metatrec/5c/0fdc4cd4742cbc8a3210d60843fd7b/qc_reads/SAMEA112490973/SAMEA112490973_R1.fastq.gz",
+		// 		"/scratch/schudoma/WORK/metatrec/5c/0fdc4cd4742cbc8a3210d60843fd7b/qc_reads/SAMEA112490973/SAMEA112490973_R2.fastq.gz"
+		// 	]
+		// ]
 		
 		prep_samples_ch.dump(pretty: true, tag: "prep_samples_ch")
 
