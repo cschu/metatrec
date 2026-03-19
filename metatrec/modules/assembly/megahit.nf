@@ -45,7 +45,7 @@ process metaT_megahit {
 
 
 process bwa2assembly {
-	container "docker://registry.git.embl.de/schudoma/align-docker:latest"
+	container "docker://registry.git.embl.org/schudoma/align-docker:latest"
 	label "align"
 
 	input:
@@ -83,7 +83,7 @@ process bwa2assembly {
 
 
 process bwa_index {
-	container "docker://registry.git.embl.de/schudoma/align-docker:latest"
+	container "docker://registry.git.embl.org/schudoma/align-docker:latest"
 	label "align"
 
 	input:
