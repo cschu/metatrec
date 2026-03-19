@@ -39,7 +39,7 @@ workflow handle_input {
 							reads = row.singles.split(",")
 						}
 					}
-					return [ meta, row.source, reads, row.contigs, row.genes ]
+					return [ meta, row.source, reads.collect({it -> file(it)}), row.contigs, row.genes ]
 				}
 				.filter { it[2] != null }
 			
