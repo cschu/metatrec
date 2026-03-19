@@ -47,50 +47,50 @@ workflow handle_input {
 	
 		} else {
 
-			fastq_input(
-				Channel.fromPath(input_dir + "/*", type: "dir")
-					.filter { !params.ignore_dirs.split(",").contains(it.name) },
-				Channel.of(null)
-			)
+			// fastq_input(
+			// 	Channel.fromPath(input_dir + "/*", type: "dir")
+			// 		.filter { !params.ignore_dirs.split(",").contains(it.name) },
+			// 	Channel.of(null)
+			// )
 
-			fastq_ch = fastq_input.out.fastqs
-				.map { sample, files -> 
-					def meta = [:]
-					meta.id = sample.id
-					meta.sample_id = sample.id.replaceAll(/_.*/, "")
-					meta.library_source = "metaT"
-					meta.is_paired = sample.is_paired
-					meta.library = sample.library
+			// fastq_ch = fastq_input.out.fastqs
+			// 	.map { sample, files -> 
+			// 		def meta = [:]
+			// 		meta.id = sample.id
+			// 		meta.sample_id = sample.id.replaceAll(/_.*/, "")
+			// 		meta.library_source = "metaT"
+			// 		meta.is_paired = sample.is_paired
+			// 		meta.library = sample.library
 					
-					return [ sample.id, meta, files ]
-				}
+			// 		return [ sample.id, meta, files ]
+			// 	}
 	
-			fastq_ch.dump(pretty: true, tag: "fastq_ch")
+			// fastq_ch.dump(pretty: true, tag: "fastq_ch")
 
-			genes_ch = Channel.fromPath(params.annotation_input_dir + "/**.{fna,ffn}.gz")
-				.map { file -> [ file.name.replaceAll(/\.psa_megahit.prodigal.fna.gz$/, ""), file ] }
-				// .map { sample_id, file -> [ sample_id.replaceAll(/_.*/, ""), file ] }
-				// .map { sample_id, file -> 
-				// 	def meta = [:]
-				// 	meta.id = sample_id
-				// 	meta.sample_id = sample_id.replaceAll(/_.*/, "")
-				// 	return [ meta, file ]
-				// }
+			// genes_ch = Channel.fromPath(params.annotation_input_dir + "/**.{fna,ffn}.gz")
+			// 	.map { file -> [ file.name.replaceAll(/\.psa_megahit.prodigal.fna.gz$/, ""), file ] }
+			// 	// .map { sample_id, file -> [ sample_id.replaceAll(/_.*/, ""), file ] }
+			// 	// .map { sample_id, file -> 
+			// 	// 	def meta = [:]
+			// 	// 	meta.id = sample_id
+			// 	// 	meta.sample_id = sample_id.replaceAll(/_.*/, "")
+			// 	// 	return [ meta, file ]
+			// 	// }
 
-			contigs_ch = Channel.fromPath(params.assembly_input_dir + "/**.fa.gz")
-				.map { file -> [ file.name.replaceAll(/-assembled.fa.gz$/, ""), file ] }
-				// .map { sample_id, file -> [ sample_id.replaceAll(/_.*/, ""), file ] }
-				// .map { sample_id, file ->
-				// 	def meta = [:]
-				// 	meta.id = sample_id
-				// 	meta.sample_id = sample_id.replaceAll(/_.*/, "")
-				// 	return [ meta, file ]
-				// }
+			// contigs_ch = Channel.fromPath(params.assembly_input_dir + "/**.fa.gz")
+			// 	.map { file -> [ file.name.replaceAll(/-assembled.fa.gz$/, ""), file ] }
+			// 	// .map { sample_id, file -> [ sample_id.replaceAll(/_.*/, ""), file ] }
+			// 	// .map { sample_id, file ->
+			// 	// 	def meta = [:]
+			// 	// 	meta.id = sample_id
+			// 	// 	meta.sample_id = sample_id.replaceAll(/_.*/, "")
+			// 	// 	return [ meta, file ]
+			// 	// }
 			
-			samples_ch = fastq_ch
-				.join(contigs_ch, by: 0)
-				.join(genes_ch, by: 0)
-				.map { sample_id, meta, reads, contigs, genes -> [ meta, reads, contigs, genes ] }
+			// samples_ch = fastq_ch
+			// 	.join(contigs_ch, by: 0)
+			// 	.join(genes_ch, by: 0)
+			// 	.map { sample_id, meta, reads, contigs, genes -> [ meta, reads, contigs, genes ] }
 		}
 
 	emit:
