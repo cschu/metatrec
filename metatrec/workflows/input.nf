@@ -18,7 +18,7 @@ workflow handle_input {
 					if (row.r1 != null && row.r2 != null) {
 						meta.is_paired = true
 						meta.library = "paired"
-						reads = [ row.r1.split(",").flatten(), row.r2.split(",").flatten() ].collect({it -> file(it)})
+						reads = [ row.r1.split(",").collect({it -> file(it)}), row.r2.split(",").collect({it -> file(it)}) ]
 					} else {
 						meta.is_paired = false
 						meta.library = "single"						
