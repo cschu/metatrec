@@ -12,30 +12,21 @@ workflow handle_input {
 				.map { row -> 
 					def meta = [:]
 					meta.id = row.id
-					// meta.source = row.source
 					meta.library_source = "metaT"
 					def reads = null
 					if (row.r1 != null && row.r2 != null) {
 						meta.is_paired = true
 						meta.library = "paired"
-						// reads = [ row.r1.split(",").collect({it -> file(it)}), row.r2.split(",").collect({it -> file(it)}) ]
-						// reads = [ row.r1, row.r2 ]
 						reads = row.r1.split(",") + row.r2.split(",")
 					} else {
 						meta.is_paired = false
 						meta.library = "single"	
 						meta.id += ".singles"					
 						if (row.r1 != null) {
-							// reads = [ row.r1.split(",") ].flatten()
-							// reads = [ row.r1 ]
 							reads = row.r1.split(",")
 						} else if (row.r2 != null) {
-							// reads = [ row.r2.split(",") ].flatten()
-							// reads = [ row.r2 ]
 							reads = row.r2.split(",")
 						} else if (row.singles != null) {
-							// reads = [ row.singles.split(",") ].flatten()
-							// reads = [ row.singles ]
 							reads = row.singles.split(",")
 						}
 					}
