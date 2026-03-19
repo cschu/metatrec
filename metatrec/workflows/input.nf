@@ -18,16 +18,16 @@ workflow handle_input {
 					if (row.r1 != null && row.r2 != null) {
 						meta.is_paired = true
 						meta.library = "paired"
-						reads = [ row.r1.split(","), row.r2.split(",") ]
+						reads = [ row.r1.split(",").flatten(), row.r2.split(",").flatten() ]
 					} else {
 						meta.is_paired = false
 						meta.library = "single"						
 						if (row.r1 != null) {
-							reads = [ row.r1.split(",") ]
+							reads = [ row.r1.split(",") ].flatten()
 						} else if (row.r2 != null) {
-							reads = [ row.r2.split(",") ]
+							reads = [ row.r2.split(",") ].flatten()
 						} else if (row.singles != null) {
-							reads = [ row.singles.split(",") ]
+							reads = [ row.singles.split(",") ].flatten()
 						}
 					}
 					return [ meta, row.source, reads, row.contigs, row.genes ]
