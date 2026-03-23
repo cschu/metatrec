@@ -105,10 +105,12 @@ workflow {
 
 		extract_stringtie_transcripts(
 			stringtie.out.gtf
+				.map { sample, gtf -> [ sample[0].id, sample, gtf ] }
 				.join(
 					prep_samples_ch.map { sample -> [sample[0].id, sample[3] ] },
 					by: 0
 				)
+				.map { sample_id, sample, gtf, genome_fasta -> [ sample, gtf, genome_fasta ] }
 		)
 
 		align_to_reference.out.alignments.dump(pretty: true, tag: "align_to_reference_out")
