@@ -111,6 +111,8 @@ workflow {
 				)
 		)
 
+		align_to_reference.out.alignments.dump(pretty: true, tag: "align_to_reference_out")
+
 		picard_insert_size(
 			align_to_reference.out.alignments
 				.filter { !it[0].id.endsWith("singles") && !it[0].id.endsWith("singles.b") }
