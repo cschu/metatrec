@@ -195,7 +195,7 @@ workflow align_to_reference {
 			}
 			.groupTuple(by:0, size: 2, remainder: true)
 			// .map { sample_id, sample_x, bam_x, sample_y, bam_y -> 
-			.map { sample_id, samples, bamfiles -> }
+			.map { sample_id, samples, bamfiles -> 
 				def meta = [:]
 				meta.id = sample_id
 				meta.library_source = sample_x.library_source
