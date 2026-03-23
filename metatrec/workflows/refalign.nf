@@ -193,12 +193,13 @@ workflow align_to_reference {
 				meta.id = meta.id.replaceAll(/.(orphans|singles|chimeras)$/, "")
 				return [ meta.id, meta, bam ]
 			}
-			.groupTuple(by:0, sort: true, size: 2, remainder: true)
+			.groupTuple(by:0, size: 2, remainder: true)
 			.map { sample_id, sample_x, bam_x, sample_y, bam_y -> 
 				def meta = [:]
 				meta.id = sample_id
 				meta.library_source = sample_x.library_source
 				meta.library = sample_x.library
+				meta.merged = (bam_x != null && bam_y != null)
 				def bamfiles = []
 				if (bam_x != null) bamfiles += [ bam_x ]
 				if (bam_y != null) bamfiles += [ bam_y ]
