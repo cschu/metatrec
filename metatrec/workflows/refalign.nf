@@ -198,8 +198,8 @@ workflow align_to_reference {
 			.map { sample_id, samples, bamfiles -> 
 				def meta = [:]
 				meta.id = sample_id
-				meta.library_source = sample_x.library_source
-				meta.library = sample_x.library
+				meta.library_source = samples[0].library_source
+				meta.library = samples[0].library
 				// meta.merged = 
 				// meta.merged = (bam_x != null && bam_y != null)
 				// def bamfiles = []
