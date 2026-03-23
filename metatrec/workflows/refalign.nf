@@ -194,15 +194,17 @@ workflow align_to_reference {
 				return [ meta.id, meta, bam ]
 			}
 			.groupTuple(by:0, size: 2, remainder: true)
-			.map { sample_id, sample_x, bam_x, sample_y, bam_y -> 
+			// .map { sample_id, sample_x, bam_x, sample_y, bam_y -> 
+			.map { sample_id, samples, bamfiles -> }
 				def meta = [:]
 				meta.id = sample_id
 				meta.library_source = sample_x.library_source
 				meta.library = sample_x.library
-				meta.merged = (bam_x != null && bam_y != null)
-				def bamfiles = []
-				if (bam_x != null) bamfiles += [ bam_x ]
-				if (bam_y != null) bamfiles += [ bam_y ]
+				// meta.merged = 
+				// meta.merged = (bam_x != null && bam_y != null)
+				// def bamfiles = []
+				// if (bam_x != null) bamfiles += [ bam_x ]
+				// if (bam_y != null) bamfiles += [ bam_y ]
 				return [ meta, bamfiles ]
 			}
 
