@@ -106,7 +106,7 @@ workflow {
 		extract_stringtie_transcripts(
 			stringtie.out.gtf
 				.join(
-					samples_ch.map { sample -> [sample[0].id, sample[3] ] },
+					prep_samples_ch.map { sample -> [sample[0].id, sample[3] ] },
 					by: 0
 				)
 		)
