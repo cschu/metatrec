@@ -42,7 +42,4 @@ process extract_stringtie_transcripts {
 
 	rm -vf genome.fa transcripts.gtf
 	"""
-
-	output:
-
 }
