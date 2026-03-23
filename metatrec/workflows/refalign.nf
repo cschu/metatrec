@@ -17,7 +17,18 @@ workflow align_to_reference {
 		.set { samples_by_domain_ch }
 
 		// Eukaryotes
-		hisat2_build(samples_by_domain_ch.euk.map { meta, source, reads, contigs, genes -> [ meta, contigs ] })
+		hisat2_build(
+			samples_by_domain_ch.euk
+				.map { meta, source, reads, contigs, genes -> 					
+					return [ meta.id, contigs ] 
+				}
+				.unique()
+				.map { sample_id, contigs ->
+					def meta = [:]
+					meta.id = sample_id
+					return [ meta, contigs ]
+				}
+		)
 		
 		hisat2_build.out.index.dump(pretty: true, tag: "hisat2_build_ch")
 		hisat2_input_ch = samples_by_domain_ch.euk
@@ -32,7 +43,18 @@ workflow align_to_reference {
 		hisat2_align(hisat2_input_ch)
 
 		// Prokaryotes
-		bowtie2_build(samples_by_domain_ch.prok.map { meta, source, reads, contigs, genes -> [ meta, contigs ] })
+		bowtie2_build(
+			samples_by_domain_ch.prok
+				.map { meta, source, reads, contigs, genes -> 					
+					return [ meta.id, contigs ] 
+				}
+				.unique()
+				.map { sample_id, contigs ->
+					def meta = [:]
+					meta.id = sample_id
+					return [ meta, contigs ]
+				}
+		)
 
 		bowtie2_build.out.index.dump(pretty: true, tag: "bowtie2_build_ch")
 		bowtie2_input_ch = samples_by_domain_ch.prok
