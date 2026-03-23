@@ -32,7 +32,7 @@ workflow align_to_reference {
 		
 		hisat2_build.out.index.dump(pretty: true, tag: "hisat2_build_ch")
 		hisat2_input_ch = samples_by_domain_ch.euk
-			.map { meta, source, reads, contigs, genes -> [ meta.id, meta, reads ] }
+			.map { meta, source, reads, contigs, genes -> [ meta.id.replaceAll(/\.singles$/, ""), meta, reads ] }
 			.combine(
 				hisat2_build.out.index.map { sample, index -> [ sample.id, index ] },
 				by: 0
@@ -58,7 +58,7 @@ workflow align_to_reference {
 
 		bowtie2_build.out.index.dump(pretty: true, tag: "bowtie2_build_ch")
 		bowtie2_input_ch = samples_by_domain_ch.prok
-			.map { meta, source, reads, contigs, genes -> [ meta.id, meta, reads ] }
+			.map { meta, source, reads, contigs, genes -> [ meta.id.replaceAll(/\.singles$/, ""), meta, reads ] }
 			.combine(
 				bowtie2_build.out.index.map { sample, index -> [ sample.id, index ] },
 				by: 0
