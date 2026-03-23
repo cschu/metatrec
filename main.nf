@@ -90,7 +90,7 @@ workflow {
 			.map { sample -> [ sample[0].id, sample ] }
 			.combine(
 				nevermore_main.out.fastqs
-					.map { sample, reads -> [ sample.id, sample, reads ] },
+					.map { sample, reads -> [ sample.id.replaceAll(/\.singles$/, ""), sample, reads ] },
 				by: 0
 			)
 			.map { sample_id, sample_raw, sample_prep, reads ->
