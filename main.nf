@@ -11,7 +11,7 @@ include { kallisto_index; kallisto_quant} from "./nevermore/modules/profilers/ka
 include { qc_bbmerge_insert_size } from "./nevermore/modules/qc/bbmerge"
 include { hisat2_build; hisat2_align } from "./nevermore/modules/align/hisat2"
 include { merge_and_sort } from "./nevermore/modules/align/helpers"
-include { stringtie } from "./metatrec/modules/assembly/stringtie"
+include { stringtie; extract_stringtie_transcripts } from "./metatrec/modules/assembly/stringtie"
 include { picard_insert_size } from "./metatrec/modules/qc/picard"
 include { samtools_coverage} from "./metatrec/modules/qc/samtools"
 include { bowtie2_build; bowtie2_align } from "./nevermore/modules/align/bowtie2"
@@ -96,54 +96,21 @@ workflow {
 			.map { sample_id, sample_raw, sample_prep, reads ->
 				return [ sample_prep, sample_raw[1], reads, sample_raw[3], sample_raw[4] ]
 			}
-			// .map { sample_id, meta, source, raw_reads, contigs, genes, reads ->
-			// 	return [ meta, source, reads, contigs, genes ]
-			// }
-		
-
-		// [DUMP: preprocessed_fastqs] [
-		// 	{
-		// 		"id": "SAMEA112490973",
-		// 		"library_source": "metaT",
-		// 		"is_paired": "true",
-		// 		"library": "paired",
-		// 		"merged": "true"
-		// 	},
-		// 	[
-		// 		"/scratch/schudoma/WORK/metatrec/5c/0fdc4cd4742cbc8a3210d60843fd7b/qc_reads/SAMEA112490973/SAMEA112490973_R1.fastq.gz",
-		// 		"/scratch/schudoma/WORK/metatrec/5c/0fdc4cd4742cbc8a3210d60843fd7b/qc_reads/SAMEA112490973/SAMEA112490973_R2.fastq.gz"
-		// 	]
-		// ]
-
-		// [DUMP: prep_samples_ch] [
-		// 	"SAMEA112490973",
-		// 	[
-		// 		{
-		// 			"id": "SAMEA112490973",
-		// 			"library_source": "metaT",
-		// 			"is_paired": "true",
-		// 			"library": "paired"
-		// 		},
-		// 		"prokaryote",
-		// 		[
-		// 			"/scratch/schudoma/WORK/metatrec/a9/a819fdc64ccd29d9198415ec053d50/fastq/SAMEA112490973/SAMEA112490973_R1.fastq.gz",
-		// 			"/scratch/schudoma/WORK/metatrec/a9/a819fdc64ccd29d9198415ec053d50/fastq/SAMEA112490973/SAMEA112490973_R2.fastq.gz"
-		// 		],
-		// 		"/g/bork6/schudoma/data_processing/trec/amr/input/assemblies/SAMEA112490973-assembled.fa.gz",
-		// 		"/g/bork6/schudoma/data_processing/trec/amr/input/genes/SAMEA112490973.psa_megahit.prodigal.fna.gz"
-		// 	],
-		// 	[
-		// 		"/scratch/schudoma/WORK/metatrec/5c/0fdc4cd4742cbc8a3210d60843fd7b/qc_reads/SAMEA112490973/SAMEA112490973_R1.fastq.gz",
-		// 		"/scratch/schudoma/WORK/metatrec/5c/0fdc4cd4742cbc8a3210d60843fd7b/qc_reads/SAMEA112490973/SAMEA112490973_R2.fastq.gz"
-		// 	]
-		// ]
 		
 		prep_samples_ch.dump(pretty: true, tag: "prep_samples_ch")
 
-		// align_to_reference(hisat2_input_ch.mix(bowtie2_input_ch))
 		align_to_reference(prep_samples_ch)
 		
 		stringtie(align_to_reference.out.alignments)
+
+		extract_stringtie_transcripts(
+			stringtie.out.gtf
+				.join(
+					samples_ch.map { sample -> [sample[0].id, sample[3] ] },
+					by: 0
+				)
+		)
+
 		picard_insert_size(
 			align_to_reference.out.alignments
 				.filter { !it[0].id.endsWith("singles") && !it[0].id.endsWith("singles.b") }
