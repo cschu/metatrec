@@ -20,7 +20,7 @@ workflow align_to_reference {
 		hisat2_build(
 			samples_by_domain_ch.euk
 				.map { meta, source, reads, contigs, genes -> 					
-					return [ meta.id, contigs ] 
+					return [ meta.id.replaceAll(/\.singles$/, ""), contigs ] 
 				}
 				.unique()
 				.map { sample_id, contigs ->
@@ -46,7 +46,7 @@ workflow align_to_reference {
 		bowtie2_build(
 			samples_by_domain_ch.prok
 				.map { meta, source, reads, contigs, genes -> 					
-					return [ meta.id, contigs ] 
+					return [ meta.id.replaceAll(/\.singles$/, ""), contigs ] 
 				}
 				.unique()
 				.map { sample_id, contigs ->
