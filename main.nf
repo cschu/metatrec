@@ -18,6 +18,7 @@ include { bowtie2_build; bowtie2_align } from "./nevermore/modules/align/bowtie2
 // include { motus; motus_merge } from "./nevermore/modules/profilers/motus"
 include { metaT_megahit; bwa_index; bwa2assembly } from "./metatrec/modules/assembly/megahit"
 include { metaT_trinity } from "./metatrec/modules/assembly/trinity"
+include { cd_hit_est } from "./metatrec/modules/assembly/cdhit"
 include { quast } from "./metatrec/modules/assembly/quast"
 
 include { align_to_reference } from "./metatrec/workflows/refalign"
@@ -46,24 +47,14 @@ params.ignore_dirs = ""
 params.do_name_sort = false
 
 
-workflow {
+workflow kallisto_flow {
+	
+	take:
+		contigs_ch
+		fastq_ch
 
-	handle_input()
-
-	samples_ch = handle_input.out.samples
-	// sample: [ meta, source, reads, row.contigs, row.genes ]
-	fastq_ch = samples_ch.map { meta, source, reads, contigs, genes -> [ meta, reads ] }
-	fastq_ch.dump(pretty: true, tag: "fastq_ch")
-
-	genes_ch = samples_ch.map { meta, source, reads, contigs, genes ->  [ meta, genes ] }
-
-	nevermore_main(fastq_ch)
-
-	if (!params.preprocessing_only) {	
-
-		qc_bbmerge_insert_size(fastq_ch)		
-
-		kallisto_index(genes_ch)
+	main:
+		kallisto_index(contigs_ch)
 		kallisto_index.out.index.dump(pretty: true, tag: "kallisto_index")
 
 		kallisto_quant_input_ch = fastq_ch
@@ -83,6 +74,47 @@ workflow {
 		kallisto_quant_input_ch.dump(pretty: true, tag: "kallisto_quant_input_ch")
 		
 		kallisto_quant(kallisto_quant_input_ch)
+
+}
+
+
+workflow {
+
+	handle_input()
+
+	samples_ch = handle_input.out.samples
+	// sample: [ meta, source, reads, row.contigs, row.genes ]
+	fastq_ch = samples_ch.map { meta, source, reads, contigs, genes -> [ meta, reads ] }
+	fastq_ch.dump(pretty: true, tag: "fastq_ch")
+
+	genes_ch = samples_ch.map { meta, source, reads, contigs, genes ->  [ meta, genes ] }
+
+	nevermore_main(fastq_ch)
+
+	if (!params.preprocessing_only) {	
+
+		qc_bbmerge_insert_size(fastq_ch)		
+
+		// kallisto_index(genes_ch)
+		// kallisto_index.out.index.dump(pretty: true, tag: "kallisto_index")
+
+		// kallisto_quant_input_ch = fastq_ch
+		// 	.map { sample, fastqs -> [ sample.id, sample, fastqs ] }
+		// 	.combine(
+		// 		kallisto_index.out.index
+		// 			.map { sample, index -> return [ sample.id, sample, index ] },
+		// 		by: 0
+		// 	)
+		// 	.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
+		// 		def meta = sample_fq.clone()
+		// 		meta.id = sample_ix.id
+		// 		meta.sample_id = sample_ix.sample_id
+		// 		return [ meta, fastqs, index ]
+		// 	}
+
+		// kallisto_quant_input_ch.dump(pretty: true, tag: "kallisto_quant_input_ch")
+		
+		// kallisto_quant(kallisto_quant_input_ch)
 
 		nevermore_main.out.fastqs.dump(pretty: true, tag: "preprocessed_fastqs")
 		
@@ -159,6 +191,20 @@ workflow {
 		metaT_trinity(assembly_input_ch, "stage1")
 
 		quast(metaT_megahit.out.contigs.mix(metaT_trinity.out.contigs))
+
+		cd_hit_est(
+			metaT_megahit.out.contigs
+				.mix(metaT_trinity.out.contigs)
+				.mix(extract_stringtie_transcripts.out.transcripts)
+				.map { sample, file -> [ sample.id, sample, file ] }
+				.groupTuple(by: 0, size: 3)
+				.map { sample_id, sample, files -> [ sample, files ] }
+		)
+
+		kallisto_flow(
+			genes_ch.mix(cd_hit_est.out.contigs),
+			fastq_ch
+		)
 
 		bwa_index(
 			metaT_megahit.out.contigs
