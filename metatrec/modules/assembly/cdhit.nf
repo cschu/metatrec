@@ -2,7 +2,7 @@ process cd_hit_est {
 	container "quay.io/biocontainers/cd-hit:4.8.1--h5ca1c30_13"
 	tag "${sample.id}"
 	cpus 8
-	memory {64.G * task.attempt}
+	memory {64.GB * task.attempt}
 	time {4.h * task.attempt}
 	
 	input:
