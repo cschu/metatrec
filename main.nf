@@ -198,7 +198,7 @@ workflow {
 				.mix(extract_stringtie_transcripts.out.transcripts)
 				.map { sample, file -> [ sample.id, sample, file ] }
 				.groupTuple(by: 0, size: 3)
-				.map { sample_id, sample, files -> [ sample, files ] }
+				.map { sample_id, sample, files -> [ sample[0], files ] }
 		)
 
 		kallisto_flow(

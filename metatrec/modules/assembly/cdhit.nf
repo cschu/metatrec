@@ -17,7 +17,7 @@ process cd_hit_est {
 	"""
 	mkdir -p ${sample.id}
 
-	zcat ${fastas} > seqs.ffn
+	cat ${fastas} > seqs.ffn
 
 	cd-hit-est -T ${task.cpus} -M ${mem} -i seqs.ffn -o ${sample.id}.cdhit -c 0.95 -n 11 -s 0.90 -d 0 -g 1 -G 1
 
