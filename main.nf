@@ -204,7 +204,7 @@ workflow {
 		kallisto_flow(
 			genes_ch
 				.map { sample, fasta -> [ sample, "metaG", fasta ] }			
-				mix(
+				.mix(
 					cd_hit_est.out.contigs.map { sample, fasta -> [ sample, "assembled", fasta ] }
 				),
 			fastq_ch
