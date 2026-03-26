@@ -95,27 +95,6 @@ workflow {
 
 		qc_bbmerge_insert_size(fastq_ch)		
 
-		// kallisto_index(genes_ch)
-		// kallisto_index.out.index.dump(pretty: true, tag: "kallisto_index")
-
-		// kallisto_quant_input_ch = fastq_ch
-		// 	.map { sample, fastqs -> [ sample.id, sample, fastqs ] }
-		// 	.combine(
-		// 		kallisto_index.out.index
-		// 			.map { sample, index -> return [ sample.id, sample, index ] },
-		// 		by: 0
-		// 	)
-		// 	.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
-		// 		def meta = sample_fq.clone()
-		// 		meta.id = sample_ix.id
-		// 		meta.sample_id = sample_ix.sample_id
-		// 		return [ meta, fastqs, index ]
-		// 	}
-
-		// kallisto_quant_input_ch.dump(pretty: true, tag: "kallisto_quant_input_ch")
-		
-		// kallisto_quant(kallisto_quant_input_ch)
-
 		nevermore_main.out.fastqs.dump(pretty: true, tag: "preprocessed_fastqs")
 		
 		prep_samples_ch = samples_ch
