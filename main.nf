@@ -61,14 +61,14 @@ workflow kallisto_flow {
 			.map { sample, fastqs -> [ sample.id, sample, fastqs ] }
 			.combine(
 				kallisto_index.out.index
-					.map { sample, index -> return [ sample.id, sample, index ] },
+					.map { sample, index_name, index -> return [ sample.id, sample, index_name, index ] },
 				by: 0
 			)
-			.map { sample_id, sample_fq, fastqs, sample_ix, index  ->
+			.map { sample_id, sample_fq, fastqs, sample_ix, index_name, index  ->
 				def meta = sample_fq.clone()
 				meta.id = sample_ix.id
 				meta.sample_id = sample_ix.sample_id
-				return [ meta, fastqs, index ]
+				return [ meta, index_name, fastqs, index ]
 			}
 
 		kallisto_quant_input_ch.dump(pretty: true, tag: "kallisto_quant_input_ch")
@@ -202,7 +202,11 @@ workflow {
 		)
 
 		kallisto_flow(
-			genes_ch.mix(cd_hit_est.out.contigs),
+			genes_ch
+				.map { sample, fasta -> [ sample, "metaG", fasta ] }			
+				mix(
+					cd_hit_est.out.contigs.map { sample, fasta -> [ sample, "assembled", fasta ] }
+				),
 			fastq_ch
 		)
 
